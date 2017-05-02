@@ -57,7 +57,7 @@ int main() {
   for (int i=0; i<numCRows; i++)
   {
       for (int j=0; j<numCColumns; j++){
-          printf("%f ", C[]);
+          printf("%f ", C[i*numCColumns + j]);
       }
       printf("\n");
   }
