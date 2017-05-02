@@ -26,7 +26,7 @@ __global__ void matrixMultiplyShared(float *A, float *B, float *C,
   for (int ph=0; ph<ceil((numAColumns)/float(TILE_WIDTH)); ++ph)
   {
     
-    if ((row<numARows) && (ph*TILE_WIDTH+tx)<numAColumns) 
+    if ((row<numARows-1) && (ph*TILE_WIDTH+tx)<numAColumns) 
       Ads[ty][tx] = A[row*numAColumns + ph*TILE_WIDTH+tx];    
    else
       Ads[ty][tx] = 0;

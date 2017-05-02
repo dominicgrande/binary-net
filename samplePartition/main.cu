@@ -53,7 +53,7 @@ int main() {
                                 numCColumns);
 
 
-  serialMatrixMultiply(A, B, C, numARows, numAColumns, numBRows, numBColumns, numCRows, numCColumns, 4);
+  serialMatrixMultiply(A, B, C, numARows, numAColumns, numBRows, numBColumns, numCRows, numCColumns, 5);
 
   for (int i=0; i<numCRows; i++)
   {
