@@ -7,6 +7,7 @@
 int main() {
   float *A; // The A matrix
   float *B; // The B matrix
+  float *B_CPU;
   float *C; // The output C matrix
 
   int numARows;    // number of rows in the matrix A
@@ -24,6 +25,7 @@ int main() {
   numBColumns = 5;
   cudaMallocManaged(&A, numARows*numAColumns*sizeof(float));
   cudaMallocManaged(&B, numBRows*numBColumns*sizeof(float));
+  cudaMallocManaged(&B_CPU, numBRows*numBColumns*sizeof(float));
   
   for (int i=0; i<numARows; i++){
       for (int j=0; j<numAColumns; j++){
@@ -34,6 +36,12 @@ int main() {
   for (int i=0; i<numBRows; i++){
       for (int j=0; j<numBColumns; j++){
           B[i*numBColumns+j] = 3.0;
+      }
+  }
+
+  for (int i=0; i<numBRows; i++){
+      for (int j=0; j<numBColumns; j++){
+          B_CPU[i*numBColumns+j] = 3.0;
       }
   }
 
@@ -53,7 +61,7 @@ int main() {
                                 numCColumns);
 
 
-  serialMatrixMultiply(A, B, C, numARows, numAColumns, numBRows, numBColumns, numCRows, numCColumns, 4);
+  serialMatrixMultiply(A, B_CPU, C, numARows, numAColumns, numBRows, numBColumns, numCRows, numCColumns, 4);
 
   cudaDeviceSynchronize();
 
