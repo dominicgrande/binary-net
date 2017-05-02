@@ -7,25 +7,26 @@
 int main() {
   float *A; // The A matrix
   float *B; // The B matrix
-  float *B_CPU;
   float *C; // The output C matrix
+
+  float *A_device;
+  float *B_device;
+  float *C_device;
 
   int numARows;    // number of rows in the matrix A
   int numAColumns; // number of columns in the matrix A
   int numBRows;    // number of rows in the matrix B
   int numBColumns; // number of columns in the matrix B
   int numCRows;    // number of rows in the matrix C (you have to set this)
-  int numCColumns; // number of columns in the matrix C (you have to set
-                   // this
+  int numCColumns; // number of columns in the matrix C (you have to set this
                      
 //Need to create input arrays
   numARows = 5;
   numAColumns = 5;
   numBRows = 5;
   numBColumns = 5;
-  cudaMallocManaged(&A, numARows*numAColumns*sizeof(float));
-  cudaMallocManaged(&B, numBRows*numBColumns*sizeof(float));
-  cudaMallocManaged(&B_CPU, numBRows*numBColumns*sizeof(float));
+  A = (float *) malloc(numARows*numAColumns*sizeof(float));
+  B = (float *)malloc(numBRows*numBColumns*sizeof(float));
   
   for (int i=0; i<numARows; i++){
       for (int j=0; j<numAColumns; j++){
@@ -39,16 +40,17 @@ int main() {
       }
   }
 
-  for (int i=0; i<numBRows; i++){
-      for (int j=0; j<numBColumns; j++){
-          B_CPU[i*numBColumns+j] = 3.0;
-      }
-  }
-
   //@@ Set numCRows and numCColumns
   numCRows = numARows; 
   numCColumns = numBColumns;
-  cudaMallocManaged(&C, numCRows*numCColumns*sizeof(float));
+  C = (float *)malloc(numCRows*numCColumns*sizeof(float));
+
+  cudaMalloc(&A_device, numARows*numAColumns*sizeof(float));
+  cudaMalloc(&B_device, numBRows*numBColumns*sizeof(float));
+  cudaMalloc(&C_device, numCRows*numCColumns*sizeof(float));
+
+  cudaMemcpy(A_device, A, numARows*numAColumns*sizeof(float), cudaMemcpyHostToDevice);
+  cudaMemcpy(B_device, B, numBRows*numBColumns*sizeof(float), cudaMemcpyHostToDevice);
 
   //@@ Initialize the grid and block dimensions here
   dim3 dimGrid(ceil(numCColumns/float(TILE_WIDTH)), ceil(numCRows/float(TILE_WIDTH)));
@@ -60,10 +62,14 @@ int main() {
                                 numBColumns, numCRows,
                                 numCColumns);
 
-
-  serialMatrixMultiply(A, B_CPU, C, numARows, numAColumns, numBRows, numBColumns, numCRows, numCColumns, 4);
+  float * A_second;
+  A_second = (float *)malloc(5*sizeof(float));
+  cudaMemcpy(A_second, &A_device[20], 5*sizeof(float), cudaMemcpyDeviceToHost);
+  serialMatrixMultiply(A_second, B, C, numARows, numAColumns, numBRows, numBColumns, numCRows, numCColumns, 4);
 
   cudaDeviceSynchronize();
+
+  cudaMemcpy(C, C_device, 20*sizeof(float), cudaMemcpyDeviceToHost);
 
   for (int i=0; i<numCRows; i++)
   {
