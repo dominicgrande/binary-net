@@ -39,20 +39,20 @@ class Gemm(cuda.GpuOp):
         assert inp2.ndim == 2
 
         return theano.Apply(self, [inp1, inp2], [self.output_type(inp1)()])
-    
+ 
     def output_type(self, inp):
         return cuda.CudaNdarrayType(broadcastable=[False, False])
 
     def make_thunk(self, node, storage_map, _, _2):
-        
+
         mod = SourceModule(open("binary_kernels.cu").read())
         gemm_kernel = mod.get_function("gemm")
-    
+
         inputs = [storage_map[v] for v in node.inputs]
         outputs = [storage_map[v] for v in node.outputs]
 
         def thunk():
-            
+
             # inputs
             A = inputs[0][0]
             B = inputs[1][0]

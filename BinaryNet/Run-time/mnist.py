@@ -25,23 +25,21 @@ from pylearn2.utils import serial
 from collections import OrderedDict
 
 if __name__ == "__main__":
-    
     batch_size = 10000
-    print("batch_size = "+str(batch_size))
-    
+    print "batch_size = "+str(batch_size)
     # MLP parameters
     num_units = 4096
-    print("num_units = "+str(num_units))
+    print "num_units = "+str(num_units)
     n_hidden_layers = 3
-    print("n_hidden_layers = "+str(n_hidden_layers))
-    
+    print "n_hidden_layers = "+str(n_hidden_layers)
+
     # kernel = "baseline"
     kernel = "xnor"
     # kernel = "theano"
-    print("kernel = "+ kernel)
-    
-    print('Loading MNIST dataset...')
-    
+    print "kernel = "+ kernel
+
+    print 'Loading MNIST dataset...'
+
     test_set = MNIST(which_set= 'test', center = False)
     # Inputs in the range [-1,+1]
     test_set.X = 2* test_set.X.reshape(-1, 784) - 1.
