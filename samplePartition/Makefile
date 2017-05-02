@@ -1,18 +1,11 @@
-OPT_GCC = -g 
-
-OPT = -D_XOPEN_SOURCE=700
-LIB = -lrt -pthread
-
-all: cons prod
-
 main: matrixMul serialMatrixMul
-	nvcc $(OPT_GCC) serialMatrixMul.o matrixMul.o main.cu -o mainRun $(LIB)
+	nvcc serialMatrixMul.o matrixMul.o main.cu -o mainRun 
 
 matrixMul: matrixMul.cu
-	nvcc $(OPT_GCC) $(OPT) -o matrixMul shm-posix-consumer.cu  $(LIB)
+	nvcc -o matrixMul matrixMul.cu  
 
 serialMatrixMul: serialMatrixMul.cu
-	nvcc $(OPT_GCC) $(OPT) -o serialMatrixMul shm-posix-producer.cu  $(LIB)
+	nvcc -o serialMatrixMul serialMatrixMul.cu  
 
 run: main
 	./mainRun
