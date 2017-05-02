@@ -1,5 +1,5 @@
 main: matrixMul serialMatrixMul
-	nvcc serialMatrixMul.o matrixMul.o main.cu -o mainRun 
+	nvcc serialMatrixMul.o matrixMul.o mainNonUnified.cu -o mainRun 
 
 matrixMul: matrixMul.cu
 	nvcc -c matrixMul.cu  
