@@ -11,5 +11,5 @@ run: main
 	./mainRun
 
 clean:
-	rm -f cons prod trial
+	rm -f mainRun
 	rm -f *.o
