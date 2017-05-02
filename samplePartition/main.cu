@@ -53,7 +53,7 @@ int main() {
                                 numCColumns);
 
 
-  serialMatrixMultiply(A, B, C, numARows, numAColumns, numBRows, numBColumns, numCRows, numCColumns, 5);
+  serialMatrixMultiply(A, B, C, numARows, numAColumns, numBRows, numBColumns, numCRows, numCColumns, 4);
 
   cudaDeviceSynchronize();
 
