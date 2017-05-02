@@ -57,7 +57,7 @@ int main() {
   dim3 dimBlock(TILE_WIDTH, TILE_WIDTH);
   
   //@@ Launch the GPU Kernel here
-  matrixMultiplyShared<<<dimGrid, dimBlock>>>(A, B, C, numARows,
+  matrixMultiplyShared<<<dimGrid, dimBlock>>>(A_device, B_device, C_device, numARows,
                                 numAColumns, numBRows,
                                 numBColumns, numCRows,
                                 numCColumns);
