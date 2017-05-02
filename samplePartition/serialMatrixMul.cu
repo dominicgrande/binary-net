@@ -10,7 +10,7 @@ void serialMatrixMultiply(float *A, float *B, float *C,
         for(int j=0; j<numBColumns; ++j){
             C[i][j]=0;
             for(int k=0; k<numAColumns; ++k)
-                C[i][j]=C[i][j]+(A[i][k]*B[k][j]);
+                C[i*numBColumns+j]=C[i*numBColumns+j]+(A[i*numAColumns+k]*B[k*numBColumns+j]);
         }
     }
 }
