@@ -2,7 +2,7 @@
 #include "serialMatrixMul.h"
 #include <stdio.h>
 
-#define TILE_WIDTH 64
+#define TILE_WIDTH 2
 
 int main() {
   float *A; // The A matrix

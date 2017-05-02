@@ -1,4 +1,4 @@
-#define TILE_WIDTH 64
+#define TILE_WIDTH 2
 
 // Compute C = A * B
 __global__ void matrixMultiplyShared(float *A, float *B, float *C,
