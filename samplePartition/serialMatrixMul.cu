@@ -8,7 +8,7 @@ void serialMatrixMultiply(float *A, float *B, float *C,
                                          //p is row second matrix, q is column second matrix
     for(int i=numAStart; i<numARows; ++i){
         for(int j=0; j<numBColumns; ++j){
-            C[i][j]=0;
+            C[i*numBColumns+j]=0;
             for(int k=0; k<numAColumns; ++k)
                 C[i*numBColumns+j]=C[i*numBColumns+j]+(A[i*numAColumns+k]*B[k*numBColumns+j]);
         }
