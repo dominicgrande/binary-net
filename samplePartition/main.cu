@@ -33,7 +33,7 @@ int main() {
 
   for (int i=0; i<numBRows; i++){
       for (int j=0; j<numBColumns; j++){
-          B[i*numAColumns+j] = 3.0;
+          B[i*numBColumns+j] = 3.0;
       }
   }
 
@@ -47,7 +47,7 @@ int main() {
   dim3 dimBlock(TILE_WIDTH, TILE_WIDTH);
   
   //@@ Launch the GPU Kernel here
-  matrixMultiplyShared<<<dimGrid, dimBlock>>>(A, B, C, numARows-1,
+  matrixMultiplyShared<<<dimGrid, dimBlock>>>(A, B, C, numARows,
                                 numAColumns, numBRows,
                                 numBColumns, numCRows,
                                 numCColumns);
