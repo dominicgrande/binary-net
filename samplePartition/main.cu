@@ -55,6 +55,8 @@ int main() {
 
   serialMatrixMultiply(A, B, C, numARows, numAColumns, numBRows, numBColumns, numCRows, numCColumns, 5);
 
+  cudaDeviceSynchronize();
+
   for (int i=0; i<numCRows; i++)
   {
       for (int j=0; j<numCColumns; j++){
@@ -63,7 +65,7 @@ int main() {
       printf("\n");
   }
 
-  cudaDeviceSynchronize();
+  
   //@@ Copy the GPU memory back to the CPU here
   
 
