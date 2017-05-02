@@ -64,11 +64,14 @@ int main() {
 
   float * A_second;
   A_second = (float *)malloc(5*sizeof(float));
+
+  cudaMemcpy(A_second, &(A_device[20]), numAColumns*sizeof(float), cudaMemcpyDeviceToHost);
+
   for (int i=0; i<5; i++)
     printf("%f", A_second[i]);
 
   printf("\n");
-  cudaMemcpy(A_second, &(A_device[20]), numAColumns*sizeof(float), cudaMemcpyDeviceToHost);
+
   serialMatrixMultiply(A_second, B, C, numARows, numAColumns, numBRows, numBColumns, numCRows, numCColumns, 4);
 
   cudaDeviceSynchronize();
