@@ -1,3 +1,6 @@
+#include "matrixMul.h"
+#include "serialMatrixMul.h"
+
 #define TILE_WIDTH 64
 
 int main() {
