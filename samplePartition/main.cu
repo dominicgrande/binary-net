@@ -1,7 +1,6 @@
 #define TILE_WIDTH 64
 
-int main(int argc, char **argv) {
-  wbArg_t args;
+int main() {
   float *A; // The A matrix
   float *B; // The B matrix
   float *C; // The output C matrix

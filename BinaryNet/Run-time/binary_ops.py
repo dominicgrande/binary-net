@@ -56,7 +56,7 @@ class Gemm(cuda.GpuOp):
             # inputs
             A = inputs[0][0]
             B = inputs[1][0]
-            
+	    print type(A[0][0])            
             # dimensions
             m = A.shape[0]
             n = A.shape[1]
