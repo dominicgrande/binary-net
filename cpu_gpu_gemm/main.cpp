@@ -121,7 +121,7 @@ void serialMatrixMultiply(float *A, float *B, float *C,
                 C[i*numBColumns+j]=C[i*numBColumns+j]+(A[(i-numAStart)*numAColumns+k]*B[k*numBColumns+j]);
         }
     }
-
+}
 
 // Main ------------------------------------------------------------------------------------------
 int main(){
