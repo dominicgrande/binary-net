@@ -57,16 +57,16 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
                                  C_Row, C_Column, B, A, C);
     printf("Made it after GPU kernel. Need sync\n");
-    float* temp_A_Host;
+    double* temp_A_Host;
     if (alpha<1){
-        temp_A_Host = (float *)malloc(sizeof(float)*A_CPU_Row*A_Column);
+        temp_A_Host = (float *)malloc(sizeof(double)*A_CPU_Row*A_Column);
 
-        cudaMemcpy(temp_A_Host, &A[A_GPU_Row* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
+        cudaMemcpy(temp_A_Host, &A[A_GPU_Row* A_Column], sizeof(double)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
 
         printf("Memcpy is no good.\n");
 
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
-                A_CPU_Row, B_Column, A_Column, 1, temp_A_Host, A_Column, B_Host, B_Column, 0.0, &C_Host[(int)C_Column*alpha*C_Row], B_Column);
+                A_CPU_Row, B_Column, A_Column, 1, temp_A_Host, A_Column, B_Host, B_Column, 0.0, &C_Host[(int)(C_Column*alpha*C_Row)], B_Column);
 
         // serialMatrixMultiply(temp_A_Host, B_Host, C_Host, 
                             // A_Row, A_Column,
@@ -130,13 +130,13 @@ void serialMatrixMultiply(float *A, float *B, float *C,
 // Main ------------------------------------------------------------------------------------------
 int main(){
 
-    float* A;
-    float* B;
-    float* C;
+    double* A;
+    double* B;
+    double* C;
 
-    float* A_device;
-    float* B_device;
-    float* C_device;
+    double* A_device;
+    double* B_device;
+    double* C_device;
 
     int A_Row, A_Column, B_Row, B_Column, C_Row, C_Column;
 
@@ -150,13 +150,13 @@ int main(){
     // float alpha = .9999;
     float alpha = .9999;
 
-    A = (float *)malloc(A_Row*A_Column*sizeof(float));
-    B = (float *)malloc(B_Row*B_Column*sizeof(float));
-    C = (float *)malloc(C_Row*C_Column*sizeof(float));
+    A = (double *)malloc(A_Row*A_Column*sizeof(double));
+    B = (double *)malloc(B_Row*B_Column*sizeof(double));
+    C = (double *)malloc(C_Row*C_Column*sizeof(double));
 
-    cudaMalloc(&A_device, A_Row*A_Column*sizeof(float));
-    cudaMalloc(&B_device, B_Row*B_Column*sizeof(float));
-    cudaMalloc(&C_device, C_Row*C_Column*sizeof(float));
+    cudaMalloc(&A_device, A_Row*A_Column*sizeof(double));
+    cudaMalloc(&B_device, B_Row*B_Column*sizeof(double));
+    cudaMalloc(&C_device, C_Row*C_Column*sizeof(double));
 
     for (int i=0; i<A_Row*A_Column; i++)
         A[i] = 5.0;
@@ -164,8 +164,8 @@ int main(){
     for (int i=0; i<B_Row*B_Column; i++)
         B[i] = 5.0;
 
-    cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
-    cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
+    cudaMemcpy(A_device, A, sizeof(double)*A_Row*A_Column, cudaMemcpyHostToDevice);
+    cudaMemcpy(B_device, B, sizeof(double)*B_Row*B_Column, cudaMemcpyHostToDevice);
 
     printf("After memcpy\n");
 
@@ -175,7 +175,7 @@ int main(){
                   C_Row, C_Column,
                   B, C);
 
-    cudaMemcpy(C, C_device, sizeof(float)*alpha*C_Column*C_Row, cudaMemcpyDeviceToHost);
+    cudaMemcpy(C, C_device, sizeof(double)*alpha*C_Column*C_Row, cudaMemcpyDeviceToHost);
 
     cudaFree(A_device);
     cudaFree(B_device);
