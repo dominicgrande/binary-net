@@ -65,11 +65,14 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
 
         printf("Memcpy is no good.\n");
 
-        serialMatrixMultiply(temp_A_Host, B_Host, C_Host, 
-                            A_Row, A_Column,
-                            B_Row, B_Column,
-                            C_Row, C_Column,
-                            A_GPU_Row, A_Row);
+        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
+                A_CPU_Row, B_Column, A_Column, 1, temp_A_Host, A_Column, B_Host, B_Column, 0.0, &C_Host[C_Column*alpha*C_Row], B_Column);
+
+        // serialMatrixMultiply(temp_A_Host, B_Host, C_Host, 
+                            // A_Row, A_Column,
+                            // B_Row, B_Column,
+                            // C_Row, C_Column,
+                            // A_GPU_Row, A_Row);
         free(temp_A_Host);
     }
     
