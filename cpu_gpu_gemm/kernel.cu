@@ -227,7 +227,7 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 
 
 
-void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRows
+void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRows,
     int numCRows, int numCColumns, float *weights, float *x, float* output){
 
     dim3 dimGrid(ceil(numARows/TILE_WIDTH_M), ceil(numBColumns/TILE_WIDTH_N), 1);
