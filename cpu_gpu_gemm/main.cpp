@@ -148,7 +148,7 @@ int main(){
     C_Row = A_Row;
     C_Column = B_Column;
     // float alpha = .9999;
-    float alpha = .9999;
+    float alpha = 0;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
@@ -159,10 +159,10 @@ int main(){
     cudaMalloc(&C_device, C_Row*C_Column*sizeof(float));
 
     for (int i=0; i<A_Row*A_Column; i++)
-        A[i] = 5.0;
+        A[i] = 1.0;
 
     for (int i=0; i<B_Row*B_Column; i++)
-        B[i] = 5.0;
+        B[i] = 1.0;
 
     cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
     cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
@@ -180,11 +180,16 @@ int main(){
     cudaFree(A_device);
     cudaFree(B_device);
     cudaFree(C_device);
+
+for (int i=0; i<20; i++)
+        std::cout << C[i] << " ";
     
     free(A);
     free(B);
     free(C);
-    // for (int i=0; i<C_Row; i++){
+    
+	
+// for (int i=0; i<C_Row; i++){
     //     for (int j=0; j<C_Column; j++){
     //         printf("%f ", C[i*C_Column+j]);
     //     }
