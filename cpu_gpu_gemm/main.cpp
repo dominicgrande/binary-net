@@ -61,7 +61,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     if (alpha<1){
         
 
-        cudaMemcpy(temp_A_Host, &A[A_GPU_Row], sizeof(float)*(1-alpha)*A_Row*A_Column, cudaMemcpyDeviceToHost);
+        cudaMemcpy(temp_A_Host, &A[A_GPU_Row*A_Column], sizeof(float)*(1-alpha)*A_Row*B_Column, cudaMemcpyDeviceToHost);
 
         printf("Memcpy is no good.\n");
 
@@ -144,7 +144,7 @@ int main(){
 
     C_Row = A_Row;
     C_Column = B_Column;
-    float alpha = 1;
+    float alpha = 0.85;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
