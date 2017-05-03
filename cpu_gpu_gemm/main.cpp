@@ -104,12 +104,14 @@ void serialMatrixMultiply(float *A, float *B, float *C,
                                      int numBRows, int numBColumns,
                                      int numCRows, int numCColumns,
                                      int numAStart, int numAStop){
-                                         
+
     printf("numAStart: %d - numAStop: %d\n", numAStart, numAStop);
     
     for(int i=numAStart; i<numAStop; ++i){
         for(int j=0; j<numBColumns; ++j){
             C[i*numBColumns+j]=0;
+
+
             for(int k=0; k<numAColumns; ++k)
                 C[i*numBColumns+j]=C[i*numBColumns+j]+(A[(i-numAStart)*numAColumns+k]*B[k*numBColumns+j]);
         }
@@ -131,7 +133,7 @@ int main(){
     float* C_device;
 
     int A_Row, A_Column, B_Row, B_Column, C_Row, C_Column;
-    A_Row = A_Column = B_Row = B_Column = C_Row = C_Column =10000;
+    A_Row = A_Column = B_Row = B_Column = C_Row = C_Column =1000;
     float alpha = 0.95;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
