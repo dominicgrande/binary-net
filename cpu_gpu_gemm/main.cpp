@@ -128,7 +128,7 @@ int main(){
 
     int A_Row, A_Column, B_Row, B_Column, C_Row, C_Column;
     A_Row = A_Column = B_Row = B_Column = C_Row = C_Column =10000;
-    float alpha = 0.8;
+    float alpha = 1;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
