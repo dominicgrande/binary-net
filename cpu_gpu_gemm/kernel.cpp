@@ -21,11 +21,11 @@ void CPU_GEMM(){
 }
 
 
-int main(){
-    std::thread main_thread(CPU_GEMM);
-    std::cout << "threadnum: " << main_thread.get_id() << std::endl;
+// int main(){
+//     std::thread main_thread(CPU_GEMM);
+//     std::cout << "threadnum: " << main_thread.get_id() << std::endl;
 
-    main_thread.join();
-}
+//     main_thread.join();
+// }
 
 
