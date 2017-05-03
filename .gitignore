@@ -4,3 +4,5 @@ Too large
 Object files
 *.o
 *.pyc
+*.swo
+*.swp
