@@ -61,6 +61,8 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
 
     cudaMemcpy(temp_A_Host, &A[A_GPU_Row], sizeof(float)*(1-alpha)*A_Row*A_Column, cudaMemcpyDeviceToHost);
 
+    printf("Memcpy is no good.\n");
+
     serialMatrixMultiply(temp_A_Host, B_Host, C_Host,   //Replace me with device pointers  x -- w -- o
                         A_Row, A_Column,
                         B_Row, B_Column,
