@@ -55,17 +55,17 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     //Changed the A_GPU_Row start with altered alpha value
     call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
                                  C_Row, C_Column, B, A, C);
-    
+    printf("Made it after GPU kernel. Need sync\n");
     float* temp_A_Host;
-    temp_A_Host = (float *)malloc(sizeof(float)*A_Row*A_Column*(1-alpha));
+    // temp_A_Host = (float *)malloc(sizeof(float)*A_Row*A_Column*(1-alpha));
 
-    cudaMemcpy(temp_A_Host, &A[A_GPU_Row], sizeof(float)*(1-alpha)*A_Row*A_Column, cudaMemcpyDeviceToHost);
+    // cudaMemcpy(temp_A_Host, &A[A_GPU_Row], sizeof(float)*(1-alpha)*A_Row*A_Column, cudaMemcpyDeviceToHost);
 
-    serialMatrixMultiply(temp_A_Host, B_Host, C_Host,   //Replace me with device pointers  x -- w -- o
-                        A_Row, A_Column,
-                        B_Row, B_Column,
-                        C_Row, C_Column,
-                        A_GPU_Row, A_Row);
+    // serialMatrixMultiply(temp_A_Host, B_Host, C_Host,   //Replace me with device pointers  x -- w -- o
+    //                     A_Row, A_Column,
+    //                     B_Row, B_Column,
+    //                     C_Row, C_Column,
+    //                     A_GPU_Row, A_Row);
     
 
     // Launch CPU threads
@@ -82,7 +82,6 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     // free(h_flags);
     // cudaStatus = cudaFree(d_in_out);
     // cudaStatus = cudaFree(d_flags);
-    cudaDeviceSynchronize();
     timer.stop("Deallocation");
     timer.print("Deallocation", 1);
 
@@ -143,7 +142,9 @@ int main(){
 
     for (int i=0; i<B_Row*B_Column; i++)
         B[i] = 5.0;
-    
+
+    cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
+    cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
 
     CPU_GPU_Gemm(A_device, B_device, C_device, alpha,
                   A_Row, A_Column,
