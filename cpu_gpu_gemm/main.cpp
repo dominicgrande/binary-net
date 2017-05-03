@@ -45,14 +45,14 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     timer.stop("Initialization");
     timer.print("Initialization", 1);
 
-    // timer.start("Copy To Device");
+    //
     // cudaStatus = cudaMemcpy(d_flags, h_flags, n_flags * sizeof(int), cudaMemcpyHostToDevice);
     // cudaDeviceSynchronize();
     // CUDA_ERR();
-    timer.stop("Copy To Device");
-    timer.print("Copy To Device", 1);
+    
 
     //Changed the A_GPU_Row start with altered alpha value
+     timer.start("All computation");
     call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
                                  C_Row, C_Column, B, A, C);
     printf("Made it after GPU kernel. Need sync\n");
@@ -76,6 +76,8 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     // std::thread main_thread(run_cpu_threads, h_in_out, h_in_out, h_flags, p.n, p.m, p.pad, p.n_threads, p.n_gpu_threads, n_tasks, p.alpha);
 
     cudaDeviceSynchronize();
+    timer.stop("All computation");
+    timer.print("All computation", 1);
     // main_thread.join();
 
     // timer.print("Kernel", p.n_reps);
