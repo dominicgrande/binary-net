@@ -44,264 +44,60 @@
 #include <thread>
 #include <assert.h>
 
-// Params ---------------------------------------------------------------------
-struct Params {
-
-    int   device;
-    int   n_gpu_threads;
-    int   n_gpu_blocks;
-    int   n_threads;
-    int   n_warmup;
-    int   n_reps;
-    float alpha;
-    int   m;
-    int   n;
-    int   pad;
-
-    Params(int argc, char **argv) {
-        device        = 0;
-        n_gpu_threads = 256;
-        n_gpu_blocks  = 8;
-        n_threads     = 4;
-        n_warmup      = 5;
-        n_reps        = 50;
-        alpha         = 0.1;
-        m             = 1000;
-        n             = 999;
-        pad           = 1;
-        int opt;
-        while((opt = getopt(argc, argv, "hd:i:g:t:w:r:a:m:n:e:")) >= 0) {
-            switch(opt) {
-            case 'h':
-                usage();
-                exit(0);
-                break;
-            case 'd': device        = atoi(optarg); break;
-            case 'i': n_gpu_threads  = atoi(optarg); break;
-            case 'g': n_gpu_blocks = atoi(optarg); break;
-            case 't': n_threads     = atoi(optarg); break;
-            case 'w': n_warmup      = atoi(optarg); break;
-            case 'r': n_reps        = atoi(optarg); break;
-            case 'a': alpha         = atof(optarg); break;
-            case 'm': m             = atoi(optarg); break;
-            case 'n': n             = atoi(optarg); break;
-            case 'e': pad           = atoi(optarg); break;
-            default:
-                fprintf(stderr, "\nUnrecognized option!\n");
-                usage();
-                exit(0);
-            }
-        }
-        if(alpha == 0.0) {
-            assert(n_gpu_threads > 0 && "Invalid # of device threads!");
-            assert(n_gpu_blocks > 0 && "Invalid # of device blocks!");
-        } else if(alpha == 1.0) {
-            assert(n_threads > 0 && "Invalid # of host threads!");
-        } else if(alpha > 0.0 && alpha < 1.0) {
-            assert(n_gpu_threads > 0 && "Invalid # of device threads!");
-            assert(n_gpu_blocks > 0 && "Invalid # of device blocks!");
-            assert(n_threads > 0 && "Invalid # of host threads!");
-        } else {
-#ifdef CUDA_8_0
-            assert((n_gpu_threads > 0 && n_gpu_blocks > 0 || n_threads > 0) && "Invalid # of host + device workers!");
-#else
-            assert(0 && "Illegal value for -a");
-#endif
-        }
-    }
-
-    void usage() {
-        fprintf(stderr,
-                "\nUsage:  ./pad [options]"
-                "\n"
-                "\nGeneral options:"
-                "\n    -h        help"
-                "\n    -d <D>    CUDA device ID (default=0)"
-                "\n    -i <I>    # of device threads per block (default=256)"
-                "\n    -g <G>    # of device blocks (default=8)"
-                "\n    -t <T>    # of host threads (default=4)"
-                "\n    -w <W>    # of untimed warmup iterations (default=5)"
-                "\n    -r <R>    # of timed repetition iterations (default=50)"
-                "\n"
-                "\nData-partitioning-specific options:"
-                "\n    -a <A>    fraction of input elements to process on host (default=0.1)"
-#ifdef CUDA_8_0
-                "\n              NOTE: Dynamic partitioning used when <A> is not between 0.0 and 1.0"
-#else
-                "\n              NOTE: <A> must be between 0.0 and 1.0"
-#endif
-                "\n"
-                "\nBenchmark-specific options:"
-                "\n    -m <M>    # of rows (default=1000)"
-                "\n    -n <N>    # of columns (default=999)"
-                "\n    -e <B>    # of extra columns to pad (default=1)"
-                "\n");
-    }
-};
-
-// Input Data -----------------------------------------------------------------
-void read_input(T *input, const Params &p) {
-
-    // Initialize the host input vectors
-    srand(time(NULL));
-    for(int i = 0; i < p.m; i++) {
-        for(int j = 0; j < p.n; j++) {
-            input[i * p.n + j] = (T)rand() / RAND_MAX;
-        }
-    }
-    for(int i = p.n * p.m; i < (p.n + p.pad) * p.m; i++) {
-        input[i] = 0.0f;
-    }
-}
-
 // Main ------------------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 
-    const Params p(argc, argv);
-    CUDASetup    setcuda(p.device);
     Timer        timer;
     cudaError_t  cudaStatus;
 
     // Allocate
     timer.start("Allocation");
-    const int in_size     = p.m * (p.n + p.pad);
-    const int n_tasks     = divceil(in_size, p.n_gpu_threads * REGS);
-    const int n_tasks_cpu = n_tasks * p.alpha;
-    const int n_tasks_gpu = n_tasks - n_tasks_cpu;
-    const int n_flags     = n_tasks + 1;
-#ifdef CUDA_8_0
-    T * h_in_out;
-    cudaStatus = cudaMallocManaged(&h_in_out, in_size * sizeof(T));
-    T * d_in_out = h_in_out;
-    std::atomic_int *h_flags;
-    cudaStatus = cudaMallocManaged(&h_flags, n_flags * sizeof(std::atomic_int));
-    std::atomic_int *d_flags  = h_flags;
-    std::atomic_int * worklist;
-    cudaStatus = cudaMallocManaged(&worklist, sizeof(std::atomic_int));
-#else
+    const int alpha     = 0;
+
     T *    h_in_out = (T *)malloc(in_size * sizeof(T));
     T *    d_in_out;
+
     cudaStatus = cudaMalloc((void**)&d_in_out, n_tasks_gpu * p.n_gpu_threads * REGS * sizeof(T));
     std::atomic_int *h_flags = (std::atomic_int *)malloc(n_flags * sizeof(std::atomic_int));
-    int* d_flags;
-    cudaStatus = cudaMalloc((void**)&d_flags, n_flags * sizeof(int));
-    ALLOC_ERR(h_in_out, h_flags);
-#endif
+
     T *h_in_backup = (T *)malloc(in_size * sizeof(T));
-    ALLOC_ERR(h_in_backup);
-    CUDA_ERR();
+
     cudaDeviceSynchronize();
+
     timer.stop("Allocation");
     timer.print("Allocation", 1);
 
+
     // Initialize
     timer.start("Initialization");
-    const int max_gpu_threads = setcuda.max_gpu_threads();
-    read_input(h_in_out, p);
     memset(h_flags, 0, n_flags * sizeof(atomic_int));
-#ifdef CUDA_8_0
-    h_flags[0].store(1);
-#else
-    h_flags[0]           = 1;
-    h_flags[n_tasks_cpu] = 1;
-#endif
+
     timer.stop("Initialization");
     timer.print("Initialization", 1);
-    memcpy(h_in_backup, h_in_out, in_size * sizeof(T)); // Backup for reuse across iterations
 
-#ifndef CUDA_8_0
-    // Copy to device
-    timer.start("Copy To Device");
-    cudaStatus = cudaMemcpy(d_in_out, h_in_out, n_tasks_gpu * p.n_gpu_threads * REGS * sizeof(T), cudaMemcpyHostToDevice);
-    cudaStatus = cudaMemcpy(d_flags, h_flags, n_flags * sizeof(int), cudaMemcpyHostToDevice);
-    cudaDeviceSynchronize();
-    CUDA_ERR();
+    // timer.start("Copy To Device");
+    // cudaStatus = cudaMemcpy(d_flags, h_flags, n_flags * sizeof(int), cudaMemcpyHostToDevice);
+    // cudaDeviceSynchronize();
+    // CUDA_ERR();
     timer.stop("Copy To Device");
     timer.print("Copy To Device", 1);
-#endif
 
-    // Loop over main kernel
-    for(int rep = 0; rep < p.n_warmup + p.n_reps; rep++) {
+    cudaStatus = call_Padding_kernel(p.n_gpu_blocks, p.n_gpu_threads, p.n, p.m, p.pad, n_tasks, p.alpha);
 
-        // Reset
-        memcpy(h_in_out, h_in_backup, in_size * sizeof(T));
-        memset(h_flags, 0, n_flags * sizeof(atomic_int));
-#ifdef CUDA_8_0
-        h_flags[0].store(1);
-        if(p.alpha < 0.0 || p.alpha > 1.0) { // Dynamic partitioning
-            worklist[0].store(0);
-        }
-#else
-        h_flags[0]           = 1;
-        h_flags[n_tasks_cpu] = 1;
-        cudaStatus = cudaMemcpy(d_in_out, h_in_out, n_tasks_gpu * p.n_gpu_threads * REGS * sizeof(T), cudaMemcpyHostToDevice);
-        cudaStatus = cudaMemcpy(d_flags, h_flags, n_flags * sizeof(int), cudaMemcpyHostToDevice);
-        cudaDeviceSynchronize();
-        CUDA_ERR();
-#endif
+    // Launch CPU threads
+    std::thread main_thread(run_cpu_threads, h_in_out, h_in_out, h_flags, p.n, p.m, p.pad, p.n_threads, p.n_gpu_threads, n_tasks, p.alpha);
 
-        if(rep >= p.n_warmup)
-            timer.start("Kernel");
-
-        // Kernel launch
-        if(p.n_gpu_blocks > 0) {
-            assert(p.n_gpu_threads <= max_gpu_threads && 
-                "The thread block size is greater than the maximum thread block size that can be used on this device");
-            cudaStatus = call_Padding_kernel(p.n_gpu_blocks, p.n_gpu_threads, p.n, p.m, p.pad, n_tasks, p.alpha,
-                d_in_out, d_in_out, (int*)d_flags
-#ifdef CUDA_8_0
-                , sizeof(int), (int*)worklist
-#endif
-                );
-            CUDA_ERR();
-        }
-
-        // Launch CPU threads
-        std::thread main_thread(
-            run_cpu_threads, h_in_out, h_in_out, h_flags, p.n, p.m, p.pad, p.n_threads, p.n_gpu_threads, n_tasks, p.alpha
-#ifdef CUDA_8_0
-            , worklist
-#endif
-            );
-
-        cudaDeviceSynchronize();
-        main_thread.join();
-
-        if(rep >= p.n_warmup)
-            timer.stop("Kernel");
-    }
-    timer.print("Kernel", p.n_reps);
-
-#ifndef CUDA_8_0
-    // Copy back
-    timer.start("Copy Back and Merge");
-    if(p.alpha < 1.0) {
-        cudaStatus = cudaMemcpy(h_in_out, d_in_out, (n_tasks_gpu * p.n_gpu_threads * REGS > in_size) ? 
-            in_size * sizeof(T) : n_tasks_gpu * p.n_gpu_threads * REGS * sizeof(T), cudaMemcpyDeviceToHost);
-        CUDA_ERR();
-    }
     cudaDeviceSynchronize();
-    timer.stop("Copy Back and Merge");
-    timer.print("Copy Back and Merge", 1);
-#endif
+    main_thread.join();
 
-    // Verify answer
-    verify(h_in_out, h_in_backup, p.n, p.m, p.n + p.pad);
+    timer.print("Kernel", p.n_reps);
 
     // Free memory
     timer.start("Deallocation");
-#ifdef CUDA_8_0
-    cudaStatus = cudaFree(h_in_out);
-    cudaStatus = cudaFree(h_flags);
-    cudaStatus = cudaFree(worklist);
-#else
-    free(h_in_out);
-    free(h_flags);
-    cudaStatus = cudaFree(d_in_out);
-    cudaStatus = cudaFree(d_flags);
-#endif
-    CUDA_ERR();
-    free(h_in_backup);
+    // free(h_in_out);
+    // free(h_flags);
+    // cudaStatus = cudaFree(d_in_out);
+    // cudaStatus = cudaFree(d_flags);
     cudaDeviceSynchronize();
     timer.stop("Deallocation");
     timer.print("Deallocation", 1);
