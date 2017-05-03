@@ -107,6 +107,8 @@ void serialMatrixMultiply(float *A, float *B, float *C,
 
                                          //m is row first matrix, n is column first matrix
                                          //p is row second matrix, q is column second matrix
+    printf("numAStart: %d - numAStop: %d\n", numAStart, numAStop);
+    
     for(int i=numAStart; i<numAStop; ++i){
         for(int j=0; j<numBColumns; ++j){
             C[i*numBColumns+j]=0;
