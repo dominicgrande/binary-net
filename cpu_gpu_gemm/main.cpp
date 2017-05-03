@@ -146,6 +146,8 @@ int main(){
     cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
     cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
 
+    printf("After memcpy\n");
+
     CPU_GPU_Gemm(A_device, B_device, C_device, alpha,
                   A_Row, A_Column,
                   B_Row, B_Column,
