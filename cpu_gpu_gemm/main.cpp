@@ -133,8 +133,15 @@ int main(){
     float* C_device;
 
     int A_Row, A_Column, B_Row, B_Column, C_Row, C_Column;
-    A_Row = A_Column = B_Row = B_Column = C_Row = C_Column =1000;
-    float alpha = 0.95;
+
+    A_Row = 10000;
+    A_Column = 784;
+    B_Column = 4096;
+    B_Row = 784;
+
+    C_Row = A_Row;
+    C_Column = B_Column;
+    float alpha = 1;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
