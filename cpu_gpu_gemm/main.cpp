@@ -113,7 +113,7 @@ void serialMatrixMultiply(float *A, float *B, float *C,
             for(int k=0; k<numAColumns; ++k)
                 C[i*numBColumns+j]=C[i*numBColumns+j]+(A[(i-numAStart)*numAColumns+k]*B[k*numBColumns+j]);
         }
-        if (numAStart%200 == 0)
+        if (i%200 == 0)
             printf("Have run 200 rows\n");
     }
     
