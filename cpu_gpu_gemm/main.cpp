@@ -45,12 +45,11 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     timer.stop("Initialization");
     timer.print("Initialization", 1);
 
-    // timer.start("Copy To Device");
+    //
     // cudaStatus = cudaMemcpy(d_flags, h_flags, n_flags * sizeof(int), cudaMemcpyHostToDevice);
     // cudaDeviceSynchronize();
     // CUDA_ERR();
-    timer.stop("Copy To Device");
-    timer.print("Copy To Device", 1);
+    
 
     timer.start("Kernel Call");
     //Changed the A_GPU_Row start with altered alpha value
@@ -58,17 +57,19 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
                                  C_Row, C_Column, B, A, C);
     printf("Made it after GPU kernel. Need sync\n");
     float* temp_A_Host;
-    temp_A_Host = (float *)malloc(sizeof(float)*A_Row*A_Column*(1-alpha));
+    if (alpha<1){
+        temp_A_Host = (float *)malloc(sizeof(float)*A_Row*A_Column*(1-alpha));
 
-    cudaMemcpy(temp_A_Host, &A[A_GPU_Row], sizeof(float)*(1-alpha)*A_Row*A_Column, cudaMemcpyDeviceToHost);
+        cudaMemcpy(temp_A_Host, &A[A_GPU_Row], sizeof(float)*(1-alpha)*A_Row*A_Column, cudaMemcpyDeviceToHost);
 
-    printf("Memcpy is no good.\n");
+        printf("Memcpy is no good.\n");
 
-    serialMatrixMultiply(temp_A_Host, B_Host, C_Host, 
-                        A_Row, A_Column,
-                        B_Row, B_Column,
-                        C_Row, C_Column,
-                        A_GPU_Row, A_Row);
+        serialMatrixMultiply(temp_A_Host, B_Host, C_Host, 
+                            A_Row, A_Column,
+                            B_Row, B_Column,
+                            C_Row, C_Column,
+                            A_GPU_Row, A_Row);
+    }
     
 
     // Launch CPU threads
@@ -119,8 +120,7 @@ void serialMatrixMultiply(float *A, float *B, float *C,
                 C[i*numBColumns+j]=C[i*numBColumns+j]+(A[(i-numAStart)*numAColumns+k]*B[k*numBColumns+j]);
         }
     }
-    
-}
+
 
 // Main ------------------------------------------------------------------------------------------
 int main(){
