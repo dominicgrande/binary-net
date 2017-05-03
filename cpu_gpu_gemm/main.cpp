@@ -83,6 +83,23 @@ void CPU_GPU_Gemm(float * A, float * B, float * C,float alpha,
     return 0;
 }
 
+void serialMatrixMultiply(float *A, float *B, float *C,
+                                     int numARows, int numAColumns,
+                                     int numBRows, int numBColumns,
+                                     int numCRows, int numCColumns,
+                                     int numAStart, int numAStop){
+
+                                         //m is row first matrix, n is column first matrix
+                                         //p is row second matrix, q is column second matrix
+    for(int i=numAStart; i<numAStop; ++i){
+        for(int j=0; j<numBColumns; ++j){
+            C[i*numBColumns+j]=0;
+            for(int k=0; k<numAColumns; ++k)
+                C[i*numBColumns+j]=C[i*numBColumns+j]+(A[(i-numAStart)*numAColumns+k]*B[k*numBColumns+j]);
+        }
+    }
+}
+
 // Main ------------------------------------------------------------------------------------------
 int main(){
 
