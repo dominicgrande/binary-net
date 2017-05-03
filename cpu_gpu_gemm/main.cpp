@@ -63,7 +63,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
 
     printf("Memcpy is no good.\n");
 
-    serialMatrixMultiply(temp_A_Host, B_Host, C_Host,   //Replace me with device pointers  x -- w -- o
+    serialMatrixMultiply(temp_A_Host, B_Host, C_Host, 
                         A_Row, A_Column,
                         B_Row, B_Column,
                         C_Row, C_Column,
@@ -104,9 +104,7 @@ void serialMatrixMultiply(float *A, float *B, float *C,
                                      int numBRows, int numBColumns,
                                      int numCRows, int numCColumns,
                                      int numAStart, int numAStop){
-
-                                         //m is row first matrix, n is column first matrix
-                                         //p is row second matrix, q is column second matrix
+                                         
     printf("numAStart: %d - numAStop: %d\n", numAStart, numAStop);
     
     for(int i=numAStart; i<numAStop; ++i){
