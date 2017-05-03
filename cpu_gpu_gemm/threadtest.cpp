@@ -43,11 +43,13 @@
 // CPU threads--------------------------------------------------------------------------------------
 void CPU_GEMM(){
 
-    int n_threads = 10;
+    int n_threads = 4;
     std::vector<std::thread> cpu_threads;
     for(int i = 0; i < n_threads; i++) {
     
-        cpu_threads.push_back(std::thread([=]() {}));
+        cpu_threads.push_back(std::thread([=]() {
+            std::cout << "i value: " << i << std::endl;
+        }));
     }
 
     //Join the threads
