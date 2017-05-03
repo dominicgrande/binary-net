@@ -1,0 +1,6 @@
+Too large
+*.npz
+
+Object files
+*.o
+*.pyc
