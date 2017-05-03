@@ -9,7 +9,7 @@
 #include <thread>
 #include <assert.h>
 
-void CPU_GPU_Gemm(float * A, float * B, float * C,float alpha) 
+void CPU_GPU_Gemm(float * A, float * B, float * C,float alpha,
                   int A_Row, int A_Column,
                   int B_Row, int B_Column,
                   int C_Row, int C_Column);{
@@ -19,7 +19,9 @@ void CPU_GPU_Gemm(float * A, float * B, float * C,float alpha)
 
     // Allocate
     timer.start("Allocation");
-    const int alpha     = 0;
+
+    const int A_GPU_Row     = (int) A_Row * alpha;
+    const int A_CPU_Row     = A_Row - A_GPU_Row;
 
     float*    h_in_out = (float*)malloc(in_size * sizeof(float));
     float*    d_in_out;
