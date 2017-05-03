@@ -65,7 +65,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
                         A_Row, A_Column,
                         B_Row, B_Column,
                         C_Row, C_Column,
-                        A_GPU_Row, A_row);
+                        A_GPU_Row, A_Row);
     
 
     // Launch CPU threads
@@ -95,7 +95,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     timer.release("Deallocation");
 
     printf("Test Passed\n");
-    return 0;
+    // return 0;
 }
 
 void serialMatrixMultiply(float *A, float *B, float *C,
@@ -153,9 +153,9 @@ int main(){
 
     cudaMemcpy(C, C_device, sizeof(float)*alpha*C_Column*C_Row, cudaMemcpyDeviceToHost);
 
-    for (int i=0; i<numCRows; i++){
-        for (int j=0; j<numCColumns; j++){
-            printf("%f ", C[i*numCColumns+j]);
+    for (int i=0; i<C_Row; i++){
+        for (int j=0; j<C_Column; j++){
+            printf("%f ", C[i*C_Column+j]);
         }
         printf("\n");
     }
