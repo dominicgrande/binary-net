@@ -63,7 +63,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
 
     printf("Memcpy is no good.\n");
 
-    serialMatrixMultiply(temp_A_Host, B_Host, C_Host,   //Replace me with device pointers  x -- w -- o
+    serialMatrixMultiply(temp_A_Host, B_Host, C_Host, 
                         A_Row, A_Column,
                         B_Row, B_Column,
                         C_Row, C_Column,
@@ -105,14 +105,14 @@ void serialMatrixMultiply(float *A, float *B, float *C,
                                      int numCRows, int numCColumns,
                                      int numAStart, int numAStop){
 
-                                         //m is row first matrix, n is column first matrix
-                                         //p is row second matrix, q is column second matrix
     printf("numAStart: %d - numAStop: %d\n", numAStart, numAStop);
     
     for(int i=numAStart; i<numAStop; ++i){
         for(int j=0; j<numBColumns; ++j){
             C[i*numBColumns+j]=0;
-            for(int k=0; k<numAColumns; ++k){
+
+
+            for(int k=0; k<numAColumns; ++k)
                 C[i*numBColumns+j]=C[i*numBColumns+j]+(A[(i-numAStart)*numAColumns+k]*B[k*numBColumns+j]);
             }
         }
@@ -132,8 +132,15 @@ int main(){
     float* C_device;
 
     int A_Row, A_Column, B_Row, B_Column, C_Row, C_Column;
-    A_Row = A_Column = B_Row = B_Column = C_Row = C_Column =10000;
-    float alpha = 0.9990;
+
+    A_Row = 10000;
+    A_Column = 784;
+    B_Column = 4096;
+    B_Row = 784;
+
+    C_Row = A_Row;
+    C_Column = B_Column;
+    float alpha = 1;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
