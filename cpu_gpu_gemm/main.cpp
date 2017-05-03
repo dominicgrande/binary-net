@@ -40,7 +40,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
 
     // Initialize
     timer.start("Initialization");
-    memset(h_flags, 0, n_flags * sizeof(atomic_int));
+    // memset(h_flags, 0, n_flags * sizeof(atomic_int));
 
     timer.stop("Initialization");
     timer.print("Initialization", 1);
@@ -74,7 +74,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     cudaDeviceSynchronize();
     // main_thread.join();
 
-    timer.print("Kernel", p.n_reps);
+    // timer.print("Kernel", p.n_reps);
 
     // Free memory
     timer.start("Deallocation");
