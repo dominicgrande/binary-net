@@ -116,9 +116,8 @@ void serialMatrixMultiply(float *A, float *B, float *C,
 
             for(int k=0; k<numAColumns; ++k)
                 C[i*numBColumns+j]=C[i*numBColumns+j]+(A[(i-numAStart)*numAColumns+k]*B[k*numBColumns+j]);
+            }
         }
-        if (i%200 == 0)
-            printf("Have run 200 rows\n");
     }
     
 }
@@ -172,10 +171,10 @@ int main(){
 
     cudaMemcpy(C, C_device, sizeof(float)*alpha*C_Column*C_Row, cudaMemcpyDeviceToHost);
 
-    for (int i=0; i<C_Row; i++){
-        for (int j=0; j<C_Column; j++){
-            printf("%f ", C[i*C_Column+j]);
-        }
-        printf("\n");
-    }
+    // for (int i=0; i<C_Row; i++){
+    //     for (int j=0; j<C_Column; j++){
+    //         printf("%f ", C[i*C_Column+j]);
+    //     }
+    //     printf("\n");
+    // }
 }
