@@ -24,15 +24,15 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     const int A_GPU_Row     = (int) A_Row * alpha;
     const int A_CPU_Row     = A_Row - A_GPU_Row;
 
-    float*    h_in_out = (float*)malloc(in_size * sizeof(float));
-    float*    d_in_out;
+    // float*    h_in_out = (float*)malloc(in_size * sizeof(float));
+    // float*    d_in_out;
 
-    cudaStatus = cudaMalloc((void**)&d_in_out, n_tasks_gpu * p.n_gpu_threads * REGS * sizeof(T));
-    std::atomic_int *h_flags = (std::atomic_int *)malloc(n_flags * sizeof(std::atomic_int));
+    // cudaStatus = cudaMalloc((void**)&d_in_out, n_tasks_gpu * p.n_gpu_threads * REGS * sizeof(T));
+    // std::atomic_int *h_flags = (std::atomic_int *)malloc(n_flags * sizeof(std::atomic_int));
 
-    T *h_in_backup = (T *)malloc(in_size * sizeof(T));
+    // T *h_in_backup = (T *)malloc(in_size * sizeof(T));
 
-    cudaDeviceSynchronize();
+    // cudaDeviceSynchronize();
 
     timer.stop("Allocation");
     timer.print("Allocation", 1);
@@ -53,7 +53,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     timer.print("Copy To Device", 1);
 
     //Changed the A_GPU_Row start with altered alpha value
-    call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row
+    call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
                                  C_Row, C_Column, B, A, C);
     
     float* temp_A_Host;
@@ -69,10 +69,10 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     
 
     // Launch CPU threads
-    std::thread main_thread(run_cpu_threads, h_in_out, h_in_out, h_flags, p.n, p.m, p.pad, p.n_threads, p.n_gpu_threads, n_tasks, p.alpha);
+    // std::thread main_thread(run_cpu_threads, h_in_out, h_in_out, h_flags, p.n, p.m, p.pad, p.n_threads, p.n_gpu_threads, n_tasks, p.alpha);
 
     cudaDeviceSynchronize();
-    main_thread.join();
+    // main_thread.join();
 
     timer.print("Kernel", p.n_reps);
 
