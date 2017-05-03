@@ -57,11 +57,11 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
                                  C_Row, C_Column, B, A, C);
     printf("Made it after GPU kernel. Need sync\n");
     float* temp_A_Host;
-    temp_A_Host = (float *)malloc(sizeof(float)*A_Row*A_Column*(1-alpha));
+    temp_A_Host = (float *)malloc(sizeof(float)*A_Column*A_CPU_Row;
     if (alpha<1){
         
 
-        cudaMemcpy(temp_A_Host, &A[A_GPU_Row*A_Column], sizeof(float)*(1-alpha)*A_Row*B_Column, cudaMemcpyDeviceToHost);
+        cudaMemcpy(temp_A_Host, &A[A_GPU_Row*A_Column], sizeof(float)*A_CPU_Row*A_Column, cudaMemcpyDeviceToHost);
 
         printf("Memcpy is no good.\n");
 
