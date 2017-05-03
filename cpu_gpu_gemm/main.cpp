@@ -70,6 +70,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
                             C_Row, C_Column,
                             A_GPU_Row, A_Row);
     }
+    free(temp_A_Host);
     
 
     // Launch CPU threads
