@@ -4,6 +4,7 @@
 #include "support/timer.h"
 #include "support/verify.h"
 
+#include <iostream>
 #include <string.h>
 #include <cblas.h>
 #include <unistd.h>
@@ -148,7 +149,7 @@ int main(){
     C_Row = A_Row;
     C_Column = B_Column;
     // float alpha = .9999;
-    float alpha = 0;
+    float alpha = 0.35;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
@@ -181,8 +182,8 @@ int main(){
     cudaFree(B_device);
     cudaFree(C_device);
 
-for (int i=0; i<20; i++)
-        std::cout << C[i] << " ";
+//    for (int i=0; i<C_Column*C_Row; i++)
+//        std::cout << C[i] << " ";
     
     free(A);
     free(B);
