@@ -57,15 +57,15 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
                                  C_Row, C_Column, B, A, C);
     printf("Made it after GPU kernel. Need sync\n");
     float* temp_A_Host;
-    // temp_A_Host = (float *)malloc(sizeof(float)*A_Row*A_Column*(1-alpha));
+    temp_A_Host = (float *)malloc(sizeof(float)*A_Row*A_Column*(1-alpha));
 
-    // cudaMemcpy(temp_A_Host, &A[A_GPU_Row], sizeof(float)*(1-alpha)*A_Row*A_Column, cudaMemcpyDeviceToHost);
+    cudaMemcpy(temp_A_Host, &A[A_GPU_Row], sizeof(float)*(1-alpha)*A_Row*A_Column, cudaMemcpyDeviceToHost);
 
-    // serialMatrixMultiply(temp_A_Host, B_Host, C_Host,   //Replace me with device pointers  x -- w -- o
-    //                     A_Row, A_Column,
-    //                     B_Row, B_Column,
-    //                     C_Row, C_Column,
-    //                     A_GPU_Row, A_Row);
+    serialMatrixMultiply(temp_A_Host, B_Host, C_Host,   //Replace me with device pointers  x -- w -- o
+                        A_Row, A_Column,
+                        B_Row, B_Column,
+                        C_Row, C_Column,
+                        A_GPU_Row, A_Row);
     
 
     // Launch CPU threads
@@ -127,7 +127,7 @@ int main(){
 
     int A_Row, A_Column, B_Row, B_Column, C_Row, C_Column;
     A_Row = A_Column = B_Row = B_Column = C_Row = C_Column =10000;
-    float alpha = 1;
+    float alpha = 0.95;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
