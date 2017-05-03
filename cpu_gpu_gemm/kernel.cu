@@ -227,14 +227,11 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 
 
 
-cudaError_t call_GPU_Kernel(int blocks, int threads, int numAColumns, int numARows, int numBColumns, int numBRows
-     float alpha, int numCRows, int numCColumns, float *weights, float *x, float* output){
+void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRows
+    int numCRows, int numCColumns, float *weights, float *x, float* output){
 
-    dim3 dimGrid(blocks);
-    dim3 dimBlock(threads);
-    
+    dim3 dimGrid(ceil(numARows/TILE_WIDTH_M), ceil(numBColumns/TILE_WIDTH_N), 1);
+    dim3 dimBlock(TILE_WIDTH_M);
+
     gemm<<<dimGrid, dimBlock>>>(weights, x, output, numAColumns, numARows, numBColumns);
-
-    cudaError_t err = cudaGetLastError();
-    return err;
 }

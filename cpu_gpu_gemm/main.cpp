@@ -9,10 +9,11 @@
 #include <thread>
 #include <assert.h>
 
-void CPU_GPU_Gemm(float * A, float * B, float * C,float alpha,
+void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
                   int A_Row, int A_Column,
                   int B_Row, int B_Column,
-                  int C_Row, int C_Column);{
+                  int C_Row, int C_Column,
+                  float* B_Host, float* C_Host){
 
     Timer        timer;
     cudaError_t  cudaStatus;
@@ -51,7 +52,21 @@ void CPU_GPU_Gemm(float * A, float * B, float * C,float alpha,
     timer.stop("Copy To Device");
     timer.print("Copy To Device", 1);
 
-    cudaStatus = call_Padding_kernel(p.n_gpu_blocks, p.n_gpu_threads, p.n, p.m, p.pad, n_tasks, p.alpha);
+    //Changed the A_GPU_Row start with altered alpha value
+    call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row
+                                 C_Row, C_Column, B, A, C);
+    
+    float* temp_A_Host;
+    temp_A_Host = (float *)malloc(sizeof(float)*A_Row*A_Column*(1-alpha));
+
+    cudaMemcpy(temp_A_Host, &A[A_GPU_Row], sizeof(float)*(1-alpha)*A_Row*A_Column, cudaMemcpyDeviceToHost);
+
+    serialMatrixMultiply(temp_A_Host, B_Host, C_Host,   //Replace me with device pointers  x -- w -- o
+                        A_Row, A_Column,
+                        B_Row, B_Column,
+                        C_Row, C_Column,
+                        A_GPU_Row, A_row);
+    
 
     // Launch CPU threads
     std::thread main_thread(run_cpu_threads, h_in_out, h_in_out, h_flags, p.n, p.m, p.pad, p.n_threads, p.n_gpu_threads, n_tasks, p.alpha);
@@ -103,5 +118,45 @@ void serialMatrixMultiply(float *A, float *B, float *C,
 // Main ------------------------------------------------------------------------------------------
 int main(){
 
-    CPU_GPU_Gemm(float * A, float * B, float * C);
+    float* A;
+    float* B;
+    float* C;
+
+    float* A_device;
+    float* B_device;
+    float* C_device;
+
+    int A_Row, A_Column, B_Row, B_Column, C_Row, C_Column;
+    A_Row = A_Column = B_Row = B_Column = C_Row = C_Column =10000;
+    float alpha = 0.8;
+
+    A = (float *)malloc(A_Row*A_Column*sizeof(float));
+    B = (float *)malloc(B_Row*B_Column*sizeof(float));
+    C = (float *)malloc(C_Row*C_Column*sizeof(float));
+
+    cudaMalloc(&A_device, A_Row*A_Column*sizeof(float));
+    cudaMalloc(&B_device, B_Row*B_Column*sizeof(float));
+    cudaMalloc(&C_device, C_Row*C_Column*sizeof(float));
+
+    for (int i=0; i<A_Row*A_Column; i++)
+        A[i] = 5.0;
+
+    for (int i=0; i<B_Row*B_Column; i++)
+        B[i] = 5.0;
+    
+
+    CPU_GPU_Gemm(A_device, B_device, C_device, alpha,
+                  A_Row, A_Column,
+                  B_Row, B_Column,
+                  C_Row, C_Column,
+                  B, C);
+
+    cudaMemcpy(C, C_device, sizeof(float)*alpha*C_Column*C_Row, cudaMemcpyDeviceToHost);
+
+    for (int i=0; i<numCRows; i++){
+        for (int j=0; j<numCColumns; j++){
+            printf("%f ", C[i*numCColumns+j]);
+        }
+        printf("\n");
+    }
 }
