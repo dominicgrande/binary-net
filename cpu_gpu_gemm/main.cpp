@@ -143,7 +143,7 @@ int main(){
 
     C_Row = A_Row;
     C_Column = B_Column;
-    float alpha = 1;
+    float alpha = 0.95;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
