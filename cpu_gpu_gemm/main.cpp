@@ -5,6 +5,7 @@
 #include "support/verify.h"
 
 #include <string.h>
+#include <cblas.h>
 #include <unistd.h>
 #include <thread>
 #include <assert.h>
@@ -57,7 +58,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
                                  C_Row, C_Column, B, A, C);
     printf("Made it after GPU kernel. Need sync\n");
     float* temp_A_Host;
-    temp_A_Host = (float *)malloc(sizeof(float)*A_Column*A_CPU_Row;
+    temp_A_Host = (float *)malloc(sizeof(float)*A_Column*A_CPU_Row);
     if (alpha<1){
         
 
