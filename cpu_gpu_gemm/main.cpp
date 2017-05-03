@@ -26,48 +26,30 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     const int A_GPU_Row     = (int) A_Row * alpha;
     const int A_CPU_Row     = A_Row - A_GPU_Row;
 
-    // float*    h_in_out = (float*)malloc(in_size * sizeof(float));
-    // float*    d_in_out;
-
-    // cudaStatus = cudaMalloc((void**)&d_in_out, n_tasks_gpu * p.n_gpu_threads * REGS * sizeof(T));
-    // std::atomic_int *h_flags = (std::atomic_int *)malloc(n_flags * sizeof(std::atomic_int));
-
-    // T *h_in_backup = (T *)malloc(in_size * sizeof(T));
-
-    // cudaDeviceSynchronize();
-
     timer.stop("Allocation");
     timer.print("Allocation", 1);
 
 
-    // Initialize
     timer.start("Initialization");
-    // memset(h_flags, 0, n_flags * sizeof(atomic_int));
 
     timer.stop("Initialization");
     timer.print("Initialization", 1);
 
-    //
-    // cudaStatus = cudaMemcpy(d_flags, h_flags, n_flags * sizeof(int), cudaMemcpyHostToDevice);
-    // cudaDeviceSynchronize();
-    // CUDA_ERR();
-    
-
     timer.start("Kernel Call");
     //Changed the A_GPU_Row start with altered alpha value
     call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
-                                 C_Row, C_Column, B, A, C);
+                                 A_GPU_Row, C_Column, B, A, C);
     printf("Made it after GPU kernel. Need sync\n");
     float* temp_A_Host;
     if (alpha<1){
         temp_A_Host = (float *)malloc(sizeof(float)*A_CPU_Row*A_Column);
 
-        cudaMemcpy(temp_A_Host, &A[A_GPU_Row* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
+        cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
 
         printf("Memcpy is no good.\n");
 
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
-                A_CPU_Row, B_Column, A_Column, 1, temp_A_Host, A_Column, B_Host, B_Column, 0.0, &C_Host[(int)(C_Column*alpha*C_Row)], B_Column);
+                A_CPU_Row, B_Column, A_Column, 1, temp_A_Host, A_Column, B_Host, B_Column, 0.0, C_Host, B_Column);
 
         // serialMatrixMultiply(temp_A_Host, B_Host, C_Host, 
                             // A_Row, A_Column,
@@ -75,6 +57,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
                             // C_Row, C_Column,
                             // A_GPU_Row, A_Row);
         free(temp_A_Host);
+
     }
     
 
@@ -82,6 +65,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     // std::thread main_thread(run_cpu_threads, h_in_out, h_in_out, h_flags, p.n, p.m, p.pad, p.n_threads, p.n_gpu_threads, n_tasks, p.alpha);
 
     cudaDeviceSynchronize();
+    cudaMemcpy(&C[A_GPU_Row * C_Column], C_Host, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice);
     timer.stop("Kernel Call");
     timer.print("Kernel Call", 1);
     // main_thread.join();
@@ -148,8 +132,9 @@ int main(){
 
     C_Row = A_Row;
     C_Column = B_Column;
-    // float alpha = .9999;
-    float alpha = 0.35;
+    float alpha = .0101;
+    // float alpha = .0000;
+    // float alpha = 0.0001;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
@@ -176,14 +161,20 @@ int main(){
                   C_Row, C_Column,
                   B, C);
 
-    cudaMemcpy(C, C_device, sizeof(float)*alpha*C_Column*C_Row, cudaMemcpyDeviceToHost);
+    cudaMemcpy(C, C_device, sizeof(float)*C_Column*C_Row, cudaMemcpyDeviceToHost);
 
     cudaFree(A_device);
     cudaFree(B_device);
     cudaFree(C_device);
 
-//    for (int i=0; i<C_Column*C_Row; i++)
-//        std::cout << C[i] << " ";
+   for (int i=0; i<C_Column*10000; i++){
+       if( C[i] != 784){
+
+        std::cout << "WRONG: "<< "x: " <<i%4096 << " y: " << i/4096<< "  " << C[i] << std::endl;
+
+       }
+   }
+    std::cout << "ALL GOOD" << std::endl;
     
     free(A);
     free(B);
