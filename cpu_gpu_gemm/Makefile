@@ -16,7 +16,7 @@ SRC=main.cpp kernel.cpp kernel.cu
 EXE=pad
 
 all:
-	$(CXX) $(CXX_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE) -lcblas
+	$(CXX) $(CXX_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE) -lblas
 
 clean:
 	rm -f $(EXE)
