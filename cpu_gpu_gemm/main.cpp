@@ -10,6 +10,22 @@
 #include <unistd.h>
 #include <thread>
 #include <assert.h>
+#include <iostream>
+#include <chrono>
+
+template<typename TimeT = std::chrono::milliseconds>
+struct measure
+{
+    template<typename F, typename ...Args>
+    static typename TimeT::rep execution(F&& func, Args&&... args)
+    {
+        auto start = std::chrono::steady_clock::now();
+        std::forward<decltype(func)>(func)(std::forward<Args>(args)...);
+        auto duration = std::chrono::duration_cast< TimeT> 
+                            (std::chrono::steady_clock::now() - start);
+        return duration.count();
+    }
+};
 
 void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
                   int A_Row, int A_Column,
@@ -17,10 +33,10 @@ void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
                   int C_Row, int C_Column,
                   float* B_Host, float* C_Host){
 
-    Timer        timer;
+    // Timer        timer;
 
     // Allocate
-    timer.start("Allocation");
+    // timer.start("Allocation");
     cudaStream_t kernel_stream;
     cudaStream_t data_stream;
     cudaStreamCreate(&kernel_stream);
@@ -34,11 +50,11 @@ void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
     // temp_A_Host = (float *)malloc(temp_A_Host_Size);
     cudaMallocHost(&temp_A_Host,temp_A_Host_Size);
 
-    timer.stop("Allocation");
-    timer.print("Allocation", 1);
+    // timer.stop("Allocation");
+    // timer.print("Allocation", 1);
 
 
-    timer.start("Kernel Call");
+    // timer.start("Kernel Call");
     //Changed the A_GPU_Row start with altered alpha value
     cudaMemcpyAsync(temp_A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
     call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
@@ -58,23 +74,25 @@ void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
     }
 
     cudaDeviceSynchronize();
-    timer.stop("Kernel Call");
-    timer.print("Kernel Call", 1);
+    // timer.stop("Kernel Call");
+    // timer.print("Kernel Call", 1);
 
-    timer.start("Deallocation");
+    // timer.start("Deallocation");
 
     // free(temp_A_Host);
     cudaFreeHost(temp_A_Host);
     cudaStreamDestroy(kernel_stream);
     cudaStreamDestroy(data_stream);
 
-    timer.stop("Deallocation");
-    timer.print("Deallocation", 1);
+    // timer.stop("Deallocation");
+    // timer.print("Deallocation", 1);
+    // timer.stop("Allocation");
+    // timer.print("Allocation", 1);
 
     // Release timers
-    timer.release("Allocation");
-    timer.release("Kernel");
-    timer.release("Deallocation");
+    // timer.release("Allocation");
+    // timer.release("Kernel");
+    // timer.release("Deallocation");
 
 }
 
@@ -145,12 +163,41 @@ int main(){
     cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
 
     printf("After memcpy\n");
+    
+    // std::cout << measure<>::execution(CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,A_Row, A_Column, B_Row, B_Column, C_Row, C_Column, B,C )) << std::endl;
+    int timex [21];
+    int iteration = 1;
+    for(int j = 0; j<=20;  j += 1){
+        alpha = j * .05;
+        int timetemp = 0;
+        for(int i = 0; i<iteration; i++){
+            std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+            CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,
+                        A_Row, A_Column,
+                        B_Row, B_Column,
+                        C_Row, C_Column,
+                        B,C );
+            std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
 
-    CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,
-                  A_Row, A_Column,
-                  B_Row, B_Column,
-                  C_Row, C_Column,
-                  B,C );
+            timetemp += (int)std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+        }
+        timex[j] = timetemp/iteration;
+        std::cout << " time: " << timetemp/iteration << std::endl;
+        
+    }
+    // std::cout << " time: " << timetemp/iteration << std::endl;
+    for(auto const& value: timex)
+    {
+        std::cout << value << ",";
+    }
+
+
+    // CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,
+    //               A_Row, A_Column,
+    //               B_Row, B_Column,
+    //               C_Row, C_Column,
+    //               B,C );
 
     cudaMemcpy(C, C_device, sizeof(float)*C_Column*C_Row, cudaMemcpyDeviceToHost);
 
@@ -158,11 +205,11 @@ int main(){
     cudaFree(B_device);
     cudaFree(C_device);
 
-    for (int i=0; i<C_Column*10000; i++){
-      if( C[i] != 784*.5){
+    // for (int i=0; i<C_Column*10000; i++){
+    //   if( C[i] != 784*.5){
 //        std::cout << "WRONG: "<< "x: " <<i%4096 << " y: " << i/4096<< "  " << C[i] << std::endl;
-       }
-    }
+    //    }
+    // }
     std::cout << "ALL GOOD" << std::endl;
     
     free(A);
