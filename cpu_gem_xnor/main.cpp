@@ -73,7 +73,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     cudaMemcpy(&Ac[A_Column*A_CPU_Row_Start], aHostConcat, A_Column*(A_Row-A_CPU_Row_Start)*sizeof(unsigned int),
                 cudaMemcpyHostToDevice);
     
-    call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
+    // call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
     cudaDeviceSynchronize();
     // // timer.stop("Concat");
     // // timer.print("Concat", 1);
@@ -95,13 +95,13 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
 
     // // timer.start("Deallocation");
     // cudaMemcpy(C, C_Device, C_Column*C_Row*sizeof(unsigned int), cudaMemcpyDeviceToHost);
-    // cudaFree(A_device);
-    // cudaFree(B_device);
-    // cudaFree(Ac);
-    // cudaFree(Bc);
-    // cudaFree(C_Device);
+    cudaFree(A_device);
+    cudaFree(B_device);
+    cudaFree(Ac);
+    cudaFree(Bc);
+    cudaFree(C_Device);
     delete aHostConcat;
-     timer.stop("Allocation");
+    timer.stop("Allocation");
     timer.print("Allocation", 1);
     
 
