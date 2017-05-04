@@ -1,42 +1,11 @@
 #include <iostream>
 #include <iomanip>
 
-unsigned int BitCount(unsigned int u)
-{
-     unsigned int uCount;
-
-     uCount = u - ((u >> 1) & 033333333333) - ((u >> 2) & 011111111111);
-     return ((uCount + (uCount >> 3)) & 030707070707) % 63;
-}
-
 unsigned int multiply_and_pop(unsigned int A, unsigned int B){
     unsigned int x_or_value = A ^ B;
     unsigned int x = __builtin_popcount(x_or_value);
     std::cout << "Bit count value: " << x << std::endl;
     return x;
-}
-
-void xnor_gemm_serial(unsigned int* A, unsigned int* B, float* C, int M, int N, int K){
-    // for (int m=0; m<M; m++) { //32
-    //     for (int n=0; n<N; n++) { //1
-    //         float acc = 0.0f;
-    //         for (int k=0; k<K; k++) { //32
-    //             acc += multiply_and_pop(A[k*M + m], B[n*K + k]);
-    //         }
-    //         C[n*M + m] = acc;
-    //     }
-    // }
-    unsigned int sum = 0;
-    for (int c = 0; c < M; c++) {
-      for (int d = 0; d < K; d++) {
-        for (int k = 0; k < N; k++) {
-          sum = sum + multiply_and_pop(A[c*K+k], B[k*N+d]);
-        }
- 
-        C[c*K+d] = sum;
-        sum = 0;
-      }
-    }
 }
 
 void multiplyMatrices(unsigned int* A, unsigned int* B, float* C, 
@@ -56,7 +25,6 @@ int rowFirst, int columnFirst, int rowSecond, int columnSecond)
 		}
 	}
 }
-
 
 unsigned int concatenate(float* array)
 {
