@@ -289,12 +289,12 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 
 void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRows,
     int numCRows, int numCColumns, float *weights, float *x, float* output,
-    float* xt)
+    float* xt,cudaStream_t stream)
 {
     dim3 dimGrid0(ceil(numAColumns/(float)BLOCK_SIZE),
         ceil(numARows/(float)BLOCK_SIZE),1);
     dim3 dimBlock0(BLOCK_SIZE, BLOCK_SIZE, 1);
-    transpose<<<dimGrid0, dimBlock0>>>(x,xt, numARows, numAColumns); 
+    transpose<<<dimGrid0, dimBlock0, 0, stream>>>(x,xt, numARows, numAColumns); 
 
     dim3 dimGrid(ceil(numARows/(float)TILE_WIDTH_M), ceil(numBColumns/(float)TILE_WIDTH_N), 1);
     dim3 dimBlock(TILE_WIDTH_M,1,1);

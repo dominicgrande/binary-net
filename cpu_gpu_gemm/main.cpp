@@ -18,81 +18,64 @@ void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
                   float* B_Host, float* C_Host){
 
     Timer        timer;
-    cudaError_t  cudaStatus;
 
     // Allocate
     timer.start("Allocation");
+    cudaStream_t kernel_stream;
+    cudaStream_t data_stream;
+    cudaStreamCreate(&kernel_stream);
+    cudaStreamCreate(&data_stream);
 
     const int A_GPU_Row     = (int)( A_Row * alpha);
     const int A_CPU_Row     = A_Row - A_GPU_Row;
+
+    float* temp_A_Host;
+    int temp_A_Host_Size = sizeof(float)*A_CPU_Row*A_Column;
+    // temp_A_Host = (float *)malloc(temp_A_Host_Size);
+    cudaMallocHost(&temp_A_Host,temp_A_Host_Size);
 
     timer.stop("Allocation");
     timer.print("Allocation", 1);
 
 
-    timer.start("Initialization");
-
-    timer.stop("Initialization");
-    timer.print("Initialization", 1);
-
     timer.start("Kernel Call");
     //Changed the A_GPU_Row start with altered alpha value
-    float* temp_A_Host;
-    temp_A_Host = (float *)malloc(sizeof(float)*A_CPU_Row*A_Column);
-    cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
     call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
-                                 A_GPU_Row, C_Column, B, A, C,At);
-    printf("Made it after GPU kernel. Need sync\n");
-
+                                 A_GPU_Row, C_Column, B, A, C,At, kernel_stream);
 
     if (alpha<1.0){
 
 
-        printf("Memcpy is no good.\n");
+        // NONE STREAM
+        // cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
 
+        // STREAM
+        cudaMemcpyAsync(temp_A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
+        cudaStreamSynchronize (data_stream);
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
                 A_CPU_Row, B_Column, A_Column, 1, temp_A_Host, A_Column, B_Host, B_Column, 0.0, C_Host, B_Column);
-
-        // serialMatrixMultiply(temp_A_Host, B_Host, C_Host, 
-                            // A_Row, A_Column,
-                            // B_Row, B_Column,
-                            // C_Row, C_Column,
-                            // A_GPU_Row, A_Row);
-        free(temp_A_Host);
-
+        cudaMemcpyAsync(&C[A_GPU_Row * C_Column], C_Host, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice, data_stream);
     }
-    
 
-    // Launch CPU threads
-    // std::thread main_thread(run_cpu_threads, h_in_out, h_in_out, h_flags, p.n, p.m, p.pad, p.n_threads, p.n_gpu_threads, n_tasks, p.alpha);
-
-    cudaMemcpy(&C[A_GPU_Row * C_Column], C_Host, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice);
     cudaDeviceSynchronize();
     timer.stop("Kernel Call");
     timer.print("Kernel Call", 1);
-    // main_thread.join();
 
-    // timer.print("Kernel", p.n_reps);
-
-    // Free memory
     timer.start("Deallocation");
-    // free(h_in_out);
-    // free(h_flags);
-    // cudaStatus = cudaFree(d_in_out);
-    // cudaStatus = cudaFree(d_flags);
+
+    // free(temp_A_Host);
+    cudaFreeHost(temp_A_Host);
+    cudaStreamDestroy(kernel_stream);
+    cudaStreamDestroy(data_stream);
+
     timer.stop("Deallocation");
     timer.print("Deallocation", 1);
 
     // Release timers
     timer.release("Allocation");
-    timer.release("Initialization");
-    timer.release("Copy To Device");
     timer.release("Kernel");
-    timer.release("Copy Back and Merge");
     timer.release("Deallocation");
 
-    printf("Test Passed\n");
-    // return 0;
 }
 
 void serialMatrixMultiply(float *A, float *B, float *C,
@@ -187,10 +170,4 @@ int main(){
     free(C);
     
 	
-// for (int i=0; i<C_Row; i++){
-    //     for (int j=0; j<C_Column; j++){
-    //         printf("%f ", C[i*C_Column+j]);
-    //     }
-    //     printf("\n");
-    // }
 }
