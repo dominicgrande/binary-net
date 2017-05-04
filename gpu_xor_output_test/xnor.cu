@@ -196,7 +196,7 @@ int main(){
     for (int j=0; j<32*64; j++)
         B[j] = -1.0;
 
-    float* A_Device, 
+    float* A_Device; 
     float *B_Device; 
     unsigned int* A_Shrunk_Device; 
     unsigned int* B_Shrunk_Device;
@@ -212,21 +212,16 @@ int main(){
 
     dim3 blockRows(64, 1, 1);
     dim3 gridRows(32*64/(64*32)+1, 1);
-    concatenate_rows_kernel<<<gridRows, blockRows>>>(A_Device, A_Shrunk_Device, 32*64/32);
+    concatenate_rows_kernel<<<gridRows, blockRows>>>(A_Device, A_Shrunk_Device, (32*64)/32);
 
     dim3 blockColumn(64, 1, 1);
     dim3 gridColumn(32/64+1, 1);
     concatenate_cols_kernel<<<gridColumn, blockColumn>>>(B_Device, B_Shrunk_Device, 64, 32);
 
     dim3 xorBlock(16, 16, 1);
-    dim3 xorGrid(32/64+1, 32/64+1);
-    xnor_gemm<<<xorGrid, xorBlock>>>(A_Shrunk_Device, B_Shrunk_device, C_Shrunk_Device, 32, 64/32, 32);
+    dim3 xorGrid(32/16+1, 32/16+1);
+    xnor_gemm<<<xorGrid, xorBlock>>>(A_Shrunk_Device, B_Shrunk_Device, C_Shrunk_Device, 32, 64/32, 32);
 
-    // unsigned int* A_Shrunk = new unsigned int[64];
-    // unsigned int* B_Shrunk = new unsigned int[64];
-
-    // concatenate_rows_serial(A, A_Shrunk, 32, 64);
-    // concatenate_cols_serial(B, B_Shrunk, 64, 32);
 
     float* C_Shrunk = new float[32*32];
 
