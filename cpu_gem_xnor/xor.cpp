@@ -104,7 +104,7 @@ int main(){
     for (int x=0; x<32; x++)
     {
         for (int y=0; y<32; y++)
-            std::cout << C_Shrunk[x*32+y]) << " " ;
+            std::cout << C_Shrunk[x*32+y] << " " ;
             // std::cout << std::setbase(16) << std::showbase <<(int)(C_Shrunk[x*32+y]) << " " ;
 
         std::cout << std::endl;
