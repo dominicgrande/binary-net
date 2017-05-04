@@ -61,7 +61,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     timer.print("Allocation", 1);
 
 
-    timer.start("Kernel Call");
+    // timer.start("Kernel Call");
 
     //n, m, A, A_c
     call_GPU_concatenate_rows(A_Column, A_GPU_Row_End, A_device, Ac);
@@ -77,6 +77,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     cudaDeviceSynchronize();
     timer.start("B timer");
     cudaMemcpy(B_Host, B_device, sizeof(unsigned int)*B_Column*B_Row/32, cudaMemcpyDeviceToHost);
+    cudaDeviceSynchronize();
     timer.stop("B timer");
     timer.print("B timer", 1);
     // unsigned int* bHostConcat = new unsigned int[B_Row*(B_Column-B_CPU_Col_Start)];
@@ -115,8 +116,8 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
 
     // cudaDeviceSynchronize();
     // cudaMemcpy(&C[A_GPU_Row * C_Column], C_Host, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice);
-    timer.stop("Kernel Call");
-    timer.print("Kernel Call", 1);
+    // timer.stop("Kernel Call");
+    // timer.print("Kernel Call", 1);
     // main_thread.join();
 
     // timer.print("Kernel", p.n_reps);
