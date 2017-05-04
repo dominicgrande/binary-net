@@ -255,7 +255,7 @@ void call_GPU_concatenate_cols(int n, int m, int k, float* B, unsigned int* Bc){
     // concatenate_cols_kernel(B,Bc, np.intc(n), np.intc(k), block= block, grid=grid)
     concatenate_cols_kernel<<<dimGrid, dimBlock>>>(B, Bc, n, k);
 }
-void call_GPU_xnor(int n, int m, int k, float* Ac, float* Bc, float* C){
+void call_GPU_xnor(int n, int m, int k, unsigned int* Ac, unsigned int* Bc, float* C){
 
 
     int block_size = 16;
