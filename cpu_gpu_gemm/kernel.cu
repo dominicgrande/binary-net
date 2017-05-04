@@ -20,7 +20,6 @@
 // CUDA tutorial: http://www.nvidia.com/docs/IO/116711/sc11-cuda-c-basics.pdf
 // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#shared-memory
 // A is shape (m,n), B is shape (n,k) and C is shape (m,k)
-/*
 __global__ void gemm(float* A, float* B, float* C, int m, int n, int k) {
 
     // Block row and column
@@ -79,8 +78,7 @@ __global__ void gemm(float* A, float* B, float* C, int m, int n, int k) {
 
 
 }
-*/
-
+/*
 __global__ void gemm(float* A, float* B, float* C, int m, int n, int k){
 
 	int numARows = n;
@@ -159,6 +157,7 @@ __global__ void transpose(float* A, float* B, int m, int n)
 
 	return;
 }
+*/
 
 
 // 32 single float array ->  32 bits unsigned int
@@ -291,6 +290,7 @@ void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRow
     int numCRows, int numCColumns, float *weights, float *x, float* output,
     float* xt,cudaStream_t stream)
 {
+/*
     dim3 dimGrid0(ceil(numAColumns/(float)BLOCK_SIZE),
         ceil(numARows/(float)BLOCK_SIZE),1);
     dim3 dimBlock0(BLOCK_SIZE, BLOCK_SIZE, 1);
@@ -299,12 +299,12 @@ void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRow
     dim3 dimGrid(ceil(numARows/(float)TILE_WIDTH_M), ceil(numBColumns/(float)TILE_WIDTH_N), 1);
     dim3 dimBlock(TILE_WIDTH_M,1,1);
     gemm<<<dimGrid, dimBlock>>>(xt, weights, output, numARows, numAColumns, numBColumns);
-/*
+
+*/
     dim3 dimGrid(numBColumns/(float)BLOCK_SIZE, numARows/(float)BLOCK_SIZE,1);
     dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE,1);
     gemm<<<dimGrid, dimBlock>>>(x, weights, output, numARows, numAColumns,
         numBColumns);
-*/
 }
 
 
