@@ -6,7 +6,7 @@ unsigned int multiply_and_pop(unsigned int A, unsigned int B);
 void multiplyMatrices(unsigned int* A, unsigned int* B, float* C, 
 int rowFirst, int columnFirst, int rowSecond, int columnSecond);
 
-unsigned int concatenate(float* array);
+// unsigned int concatenate(float* array);
 
 void concatenate_rows_serial(float* input, unsigned int* output, 
                                 int row, int column);
