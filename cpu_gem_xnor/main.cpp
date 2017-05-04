@@ -18,7 +18,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
                   int A_Row, int A_Column,
                   int B_Row, int B_Column,
                   int C_Row, int C_Column,
-                  float* B_Host, float* C_Host){
+                  unsigned int* B_Host, float* C_Host){
 
     Timer        timer;
     cudaError_t  cudaStatus;
