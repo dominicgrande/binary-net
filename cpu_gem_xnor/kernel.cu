@@ -246,9 +246,6 @@ void call_GPU_concatenate_cols(int n, int m, int k, float* B, unsigned int* Bc){
 
     int block_size = 64;
 
-    //# Concatenating the columns of B
-    // block = (block_size,1,1)
-    // grid = (k/block_size+1,1)
     dim3 dimBlock(block_size, 1, 1);
     dim3 dimGrid(k/(block_size)+1, 1, 1);
 

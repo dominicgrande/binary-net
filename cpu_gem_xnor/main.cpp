@@ -163,9 +163,9 @@ int main(){
     int A_Row, A_Column, B_Row, B_Column, C_Row, C_Column;
 
     A_Row = 10000;
-    A_Column = 784;
+    A_Column = 4096;
     B_Column = 4096;
-    B_Row = 784;
+    B_Row = 4096;
 
     C_Row = A_Row;
     C_Column = B_Column;
