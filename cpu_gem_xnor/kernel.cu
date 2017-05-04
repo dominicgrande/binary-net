@@ -102,7 +102,7 @@ __global__ void transpose(float* A, float* B, int m, int n)
 
 
 // 32 single float array ->  32 bits unsigned int
-__device__ __host__ unsigned int concatenate(float* array)
+__host__ __device__ unsigned int concatenate(float* array)
 {
     unsigned int rvalue=0;
     unsigned int sign;
@@ -127,7 +127,6 @@ __global__ void concatenate_cols_kernel(float *a, unsigned int *b, int m, int n)
 {   
 
     int j = blockIdx.x * blockDim.x + threadIdx.x;
-    
     if(j<n){
         float * array = new float[32];
         for(int i=0; i<m; i+=32){
