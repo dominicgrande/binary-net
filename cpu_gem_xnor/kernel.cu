@@ -229,13 +229,9 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 
 void call_GPU_concatenate_rows(int n, int m, float* A, float* Ac){
 
-    
     int block_size = 64;
 
     // Concatenating the rows of A  
-    // cudaMalloc(&Ac, n*m*sizeof(float)/32);
-    // cudaMalloc(&Bc, n*k*sizeof(float)/32);
-    // cudafree(Ac); 
 
     // block = (block_size,1,1)
     // grid = (m*n/(block_size*32)+1,1)

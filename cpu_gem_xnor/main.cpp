@@ -11,7 +11,7 @@
 #include <thread>
 #include <assert.h>
 
-void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
+void CPU_GPU_Xnor(float * A, float * B, float * C, float alpha_1, float alpha_2, float alpha_3,
                   int A_Row, int A_Column,
                   int B_Row, int B_Column,
                   int C_Row, int C_Column,
@@ -22,23 +22,25 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
 
     // Allocate
     timer.start("Allocation");
+    float * Ac, Bc;
 
-    const int A_GPU_Row     = (int) A_Row * alpha;
-    const int A_CPU_Row     = A_Row - A_GPU_Row;
+    // const int A_GPU_Row     = (int) A_Row * alpha;
+    // const int A_CPU_Row     = A_Row - A_GPU_Row;
 
+    cudaMalloc(&Ac, n*m*sizeof(float)/32);
+    cudaMalloc(&Bc, n*k*sizeof(float)/32);
     timer.stop("Allocation");
     timer.print("Allocation", 1);
 
 
-    timer.start("Initialization");
-
-    timer.stop("Initialization");
-    timer.print("Initialization", 1);
-
     timer.start("Kernel Call");
+
+    // void call_GPU_concatenate_rows(int n, int m, float* A, float* Ac);
+    // void call_GPU_concatenate_cols(int n, int m, int k, float* B, float* Bc);
+    // void call_GPU_xnor(int n, int m, int k, float* Ac, float* Bc, float* C);
     //Changed the A_GPU_Row start with altered alpha value
-    call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
-                                 A_GPU_Row, C_Column, B, A, C);
+
+    void call_GPU_concatenate_rows(A_Column, A_Row, A, Ac);
     printf("Made it after GPU kernel. Need sync\n");
     float* temp_A_Host;
     if (alpha<1){
@@ -76,40 +78,18 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     timer.start("Deallocation");
     // free(h_in_out);
     // free(h_flags);
-    // cudaStatus = cudaFree(d_in_out);
-    // cudaStatus = cudaFree(d_flags);
+    cudafree(Ac); 
+    cudafree(Bc); 
     timer.stop("Deallocation");
     timer.print("Deallocation", 1);
 
     // Release timers
     timer.release("Allocation");
-    timer.release("Initialization");
-    timer.release("Copy To Device");
     timer.release("Kernel");
-    timer.release("Copy Back and Merge");
     timer.release("Deallocation");
 
     printf("Test Passed\n");
     // return 0;
-}
-
-void serialMatrixMultiply(float *A, float *B, float *C,
-                                     int numARows, int numAColumns,
-                                     int numBRows, int numBColumns,
-                                     int numCRows, int numCColumns,
-                                     int numAStart, int numAStop){
-
-    printf("numAStart: %d - numAStop: %d\n", numAStart, numAStop);
-    
-    for(int i=numAStart; i<numAStop; ++i){
-        for(int j=0; j<numBColumns; ++j){
-            C[i*numBColumns+j]=0;
-
-
-            for(int k=0; k<numAColumns; ++k)
-                C[i*numBColumns+j]=C[i*numBColumns+j]+(A[(i-numAStart)*numAColumns+k]*B[k*numBColumns+j]);
-        }
-    }
 }
 
 // Main ------------------------------------------------------------------------------------------
