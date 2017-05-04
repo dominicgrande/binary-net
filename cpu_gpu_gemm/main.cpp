@@ -40,6 +40,7 @@ void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
 
     timer.start("Kernel Call");
     //Changed the A_GPU_Row start with altered alpha value
+    cudaMemcpyAsync(temp_A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
     call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
                                  A_GPU_Row, C_Column, B, A, C,At, kernel_stream);
 
@@ -50,7 +51,6 @@ void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
         // cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
 
         // STREAM
-        cudaMemcpyAsync(temp_A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
         cudaStreamSynchronize (data_stream);
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
                 A_CPU_Row, B_Column, A_Column, 1, temp_A_Host, A_Column, B_Host, B_Column, 0.0, C_Host, B_Column);
