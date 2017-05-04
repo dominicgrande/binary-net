@@ -255,10 +255,10 @@ void call_GPU_concatenate_cols(int n, int m, int k, float* B, unsigned int* Bc){
     // concatenate_cols_kernel(B,Bc, np.intc(n), np.intc(k), block= block, grid=grid)
     concatenate_cols_kernel<<<dimGrid, dimBlock>>>(B, Bc, n, k);
 }
-void call_GPU_xnor(int n, int m, int k, float* Ac, float* Bc, float* C);
+void call_GPU_xnor(int n, int m, int k, float* Ac, float* Bc, float* C){
 
 
-    block_size = 16
+    int block_size = 16;
     // block = (block_size,block_size,1)
     // grid = (k / block_size + 1, m / block_size + 1) # better too many blocks than too little
     dim3 dimBlock_xnor(block_size, block_size, 1);
