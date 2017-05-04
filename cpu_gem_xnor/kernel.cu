@@ -227,11 +227,48 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 
 
 
-void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRows,
-    int numCRows, int numCColumns, float *weights, float *x, float* output){
+void call_GPU_concatenate_rows(int n, int m, float* A, float* Ac){
 
-    dim3 dimGrid(ceil(numARows/TILE_WIDTH_M), ceil(numBColumns/TILE_WIDTH_N), 1);
-    dim3 dimBlock(TILE_WIDTH_M);
+    
+    int block_size = 64;
 
-    gemm<<<dimGrid, dimBlock>>>(weights, x, output, numAColumns, numARows, numBColumns);
+    // Concatenating the rows of A  
+    // cudaMalloc(&Ac, n*m*sizeof(float)/32);
+    // cudaMalloc(&Bc, n*k*sizeof(float)/32);
+    // cudafree(Ac); 
+
+    // block = (block_size,1,1)
+    // grid = (m*n/(block_size*32)+1,1)
+    dim3 dimBlock(block_size,1,1);
+    dim3 dimGrid(m*n/(block_size*32)+1, 1, 1);
+
+    // concatenate_rows_kernel(A,Ac, np.intc(m*n/32), block= block, grid=grid)
+    concatenate_rows_kernel<<<dimGrid, dimBlock>>>(A, Ac, m*n/32);
+
+}
+void call_GPU_concatenate_cols(int n, int m, int k, float* B, float* Bc){
+
+    int block_size = 64;
+
+    # Concatenating the columns of B
+    // block = (block_size,1,1)
+    // grid = (k/block_size+1,1)
+    dim3 dimBlock(block_size, 1, 1);
+    dim3 dimGrid(k/(block_size), 1, 1);
+
+    // concatenate_cols_kernel(B,Bc, np.intc(n), np.intc(k), block= block, grid=grid)
+    concatenate_cols_kernel<<<dimGrid, dimBlock>>>(B, Bc, n, k);
+}
+void call_GPU_xnor(int n, int m, int k, float* Ac, float* Bc, float* C);
+
+    # Launching xnor_kernel
+    block_size = 16
+    // block = (block_size,block_size,1)
+    // grid = (k / block_size + 1, m / block_size + 1) # better too many blocks than too little
+    dim3 dimBlock_xnor(block_size, block_size, 1);
+    dim3 dimGrid_xnor(k / block_size + 1, m / block_size + 1, 1);
+
+    // xnor_kernel(Ac,Bc,C[0], np.intc(m), np.intc(n/32.), np.intc(k), block= block, grid=grid)
+    xnor_gemm<<<dimGrid_xnor,dimBlock_xnor>>>(Ac, Bc, C, m, (int)n/32.0 , k); 
+
 }

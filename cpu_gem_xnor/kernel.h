@@ -11,8 +11,9 @@ void run_cpu_threads(T *matrix_out, T *matrix, std::atomic_int *flags, int n, in
 #endif
     );
 
-void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRows,
-                        int numCRows, int numCColumns, float *weights, float *x, float* output);
+void call_GPU_Kernel(int n, int m, int k, float* A, float* B, float* C);
+void call_GPU_concatenate_rows(int n, int m, float* A, float* Ac);
+void call_GPU_xnor(int n, int m, int k, float* Ac, float* Bc, float* C);
 
 void serialMatrixMultiply(float *A, float *B, float *C,
                                      int numARows, int numAColumns,
