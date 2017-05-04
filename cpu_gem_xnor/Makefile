@@ -11,8 +11,8 @@ ifndef CHAI_CUDA_INC
 endif
 INC=-I$(CHAI_CUDA_INC)
 
-DEP=kernel.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h support/partitioner.h support/timer.h support/verify.h
-SRC=main.cpp kernel.cpp kernel.cu
+DEP=kernel.cu xor.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h support/partitioner.h support/timer.h support/verify.h
+SRC=main.cpp kernel.cu xor.cpp
 EXE=pad
 
 all:
