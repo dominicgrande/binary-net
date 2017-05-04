@@ -75,40 +75,40 @@ void concatenate_cols_serial(float* input, unsigned int* output,
     std::cout << std::endl;
 }
 
-int main(){
-    float* A;
-    A = new float[32*64];
-    float* B;
-    B = new float[32*64];
+// int main(){
+//     float* A;
+//     A = new float[32*64];
+//     float* B;
+//     B = new float[32*64];
 
-    for (int i=0; i<32*64; i++)
-        A[i] = 1.0;
+//     for (int i=0; i<32*64; i++)
+//         A[i] = 1.0;
 
-    for (int j=0; j<32*64; j++)
-        B[j] = -1.0;
+//     for (int j=0; j<32*64; j++)
+//         B[j] = -1.0;
 
-    unsigned int* A_Shrunk = new unsigned int[64];
-    unsigned int* B_Shrunk = new unsigned int[64];
+//     unsigned int* A_Shrunk = new unsigned int[64];
+//     unsigned int* B_Shrunk = new unsigned int[64];
 
-    concatenate_rows_serial(A, A_Shrunk, 32, 64);
-    concatenate_cols_serial(B, B_Shrunk, 64, 32);
+//     concatenate_rows_serial(A, A_Shrunk, 32, 64);
+//     concatenate_cols_serial(B, B_Shrunk, 64, 32);
 
-    float* C_Shrunk = new float[32*32];
+//     float* C_Shrunk = new float[32*32];
 
-    for (int i=0; i<32*32; i++)
-    {
-        C_Shrunk[i] = 0;
-    }
+//     for (int i=0; i<32*32; i++)
+//     {
+//         C_Shrunk[i] = 0;
+//     }
 
-    multiplyMatrices(B_Shrunk, A_Shrunk, C_Shrunk, 32, 2, 2, 32);
-    std::cout << "C values" << std::endl;
-    for (int x=0; x<32; x++)
-    {
-        for (int y=0; y<32; y++)
-            std::cout << C_Shrunk[x*32+y] << " " ;
-            // std::cout << std::setbase(16) << std::showbase <<(int)(C_Shrunk[x*32+y]) << " " ;
+//     multiplyMatrices(B_Shrunk, A_Shrunk, C_Shrunk, 32, 2, 2, 32);
+//     std::cout << "C values" << std::endl;
+//     for (int x=0; x<32; x++)
+//     {
+//         for (int y=0; y<32; y++)
+//             std::cout << C_Shrunk[x*32+y] << " " ;
+//             // std::cout << std::setbase(16) << std::showbase <<(int)(C_Shrunk[x*32+y]) << " " ;
 
-        std::cout << std::endl;
-    }
-}
+//         std::cout << std::endl;
+//     }
+// }
 
