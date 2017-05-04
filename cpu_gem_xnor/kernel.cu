@@ -102,7 +102,7 @@ __global__ void transpose(float* A, float* B, int m, int n)
 
 
 // 32 single float array ->  32 bits unsigned int
-__device__ unsigned int concatenate(float* array)
+__device__ __host__ unsigned int concatenate(float* array)
 {
     unsigned int rvalue=0;
     unsigned int sign;
@@ -227,7 +227,7 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 
 
 
-void call_GPU_concatenate_rows(int n, int m, float* A, float* Ac){
+void call_GPU_concatenate_rows(int n, int m, float* A, unsigned int* Ac){
 
     int block_size = 64;
 
@@ -242,23 +242,20 @@ void call_GPU_concatenate_rows(int n, int m, float* A, float* Ac){
     concatenate_rows_kernel<<<dimGrid, dimBlock>>>(A, Ac, m*n/32);
 
 }
-void call_GPU_concatenate_cols(int n, int m, int k, float* B, float* Bc){
+void call_GPU_concatenate_cols(int n, int m, int k, float* B, unsigned int* Bc){
 
     int block_size = 64;
 
-    # Concatenating the columns of B
-    // block = (block_size,1,1)
-    // grid = (k/block_size+1,1)
     dim3 dimBlock(block_size, 1, 1);
-    dim3 dimGrid(k/(block_size), 1, 1);
+    dim3 dimGrid(k/(block_size)+1, 1, 1);
 
     // concatenate_cols_kernel(B,Bc, np.intc(n), np.intc(k), block= block, grid=grid)
     concatenate_cols_kernel<<<dimGrid, dimBlock>>>(B, Bc, n, k);
 }
-void call_GPU_xnor(int n, int m, int k, float* Ac, float* Bc, float* C);
+void call_GPU_xnor(int n, int m, int k, unsigned int* Ac, unsigned int* Bc, float* C){
 
-    # Launching xnor_kernel
-    block_size = 16
+
+    int block_size = 16;
     // block = (block_size,block_size,1)
     // grid = (k / block_size + 1, m / block_size + 1) # better too many blocks than too little
     dim3 dimBlock_xnor(block_size, block_size, 1);

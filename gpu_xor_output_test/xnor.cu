@@ -226,14 +226,10 @@ int main(){
     concatenate_cols_kernel<<<gridColumn, blockColumn>>>(B_Device, B_Shrunk_Device, 4096, 4096);
 
     dim3 xorBlock(16, 16, 1);
+
     dim3 xorGrid(4096/16+1, 10000/16+1);
     xnor_gemm<<<xorGrid, xorBlock>>>(A_Shrunk_Device, B_Shrunk_Device, C_Shrunk_Device, 4096, 10000/32, 4096);
 
-    // unsigned int* A_Shrunk = new unsigned int[64];
-    // unsigned int* B_Shrunk = new unsigned int[64];
-
-    // concatenate_rows_serial(A, A_Shrunk, 32, 64);
-    // concatenate_cols_serial(B, B_Shrunk, 64, 32);
 
     // float* C_Shrunk = new float[32*32];
 
