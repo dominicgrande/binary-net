@@ -175,9 +175,9 @@ int main(){
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
     C = (float *)malloc(C_Row*C_Column*sizeof(float));
 
-    cudaMalloc(&A_device, A_Row*A_Column*sizeof(float));
-    cudaMalloc(&B_device, B_Row*B_Column*sizeof(float));
-    cudaMalloc(&C_device, C_Row*C_Column*sizeof(float));
+    // cudaMalloc(&A_device, A_Row*A_Column*sizeof(float));
+    // cudaMalloc(&B_device, B_Row*B_Column*sizeof(float));
+    // cudaMalloc(&C_device, C_Row*C_Column*sizeof(float));
 
     for (int i=0; i<A_Row*A_Column; i++)
         A[i] = 1.0;
