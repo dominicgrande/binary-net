@@ -57,8 +57,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     cudaMalloc(&Ac, m*n*sizeof(unsigned int)/32);
     cudaMalloc(&Bc, n*k*sizeof(unsigned int)/32);
     cudaMalloc(&C_Device, sizeof(float)*m*k);
-    timer.stop("Allocation");
-    timer.print("Allocation", 1);
+  
 
 
     // timer.start("Kernel Call");
@@ -103,6 +102,8 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     cudaFree(Bc);
     cudaFree(C_Device);
     delete aHostConcat;
+    timer.stop("Allocation");
+    timer.print("Allocation", 1);
 
     // void call_GPU_concatenate_rows(int n, int m, float* A, float* Ac);
     // void call_GPU_concatenate_cols(int n, int m, int k, float* B, float* Bc);
