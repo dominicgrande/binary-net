@@ -25,8 +25,8 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
 
     // Allocate
     timer.start("Allocation");
-    float *Ac;
-    float *Bc;
+    unsigned int *Ac;
+    unsigned int *Bc;
 
     // const int A_GPU_Row     = (int) A_Row * alpha;
     // const int A_CPU_Row     = A_Row - A_GPU_Row;
@@ -54,8 +54,8 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     cudaMemcpy(A_device, A, sizeof(float)*A_GPU_Row_End*A_Column, cudaMemcpyHostToDevice);
     cudaMemcpy(B_device, B, sizeof(float)*B_Column*B_Row, cudaMemcpyHostToDevice);
 
-    cudaMalloc(&Ac, m*n*sizeof(float)/32);
-    cudaMalloc(&Bc, n*k*sizeof(float)/32);
+    cudaMalloc(&Ac, m*n*sizeof(unsigned int)/32);
+    cudaMalloc(&Bc, n*k*sizeof(unsigned int)/32);
     cudaMalloc(&C_Device, sizeof(float)*m*k);
     timer.stop("Allocation");
     timer.print("Allocation", 1);
