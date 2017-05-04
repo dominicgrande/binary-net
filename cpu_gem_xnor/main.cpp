@@ -65,10 +65,10 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
 
     //n, m, A, A_c
     // timer.start("Concat");
-    // call_GPU_concatenate_rows(A_Column, A_GPU_Row_End, A_device, Ac);
-    // unsigned int* aHostConcat = new unsigned int[A_Column*(A_Row-A_CPU_Row_Start)];
-    // concatenate_rows_serial(&A[A_Column*A_CPU_Row_Start], aHostConcat, 
-    //                             A_Row-A_CPU_Row_Start, A_Column);
+    call_GPU_concatenate_rows(A_Column, A_GPU_Row_End, A_device, Ac);
+    unsigned int* aHostConcat = new unsigned int[A_Column*(A_Row-A_CPU_Row_Start)];
+    concatenate_rows_serial(&A[A_Column*A_CPU_Row_Start], aHostConcat, 
+                                A_Row-A_CPU_Row_Start, A_Column);
 
     // cudaMemcpy(&Ac[A_Column*A_CPU_Row_Start], aHostConcat, A_Column*(A_Row-A_CPU_Row_Start)*sizeof(unsigned int),
     //             cudaMemcpyHostToDevice);
@@ -100,7 +100,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // cudaFree(Ac);
     // cudaFree(Bc);
     // cudaFree(C_Device);
-    // delete aHostConcat;
+    delete aHostConcat;
      timer.stop("Allocation");
     timer.print("Allocation", 1);
     
