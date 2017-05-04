@@ -54,8 +54,8 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     cudaMemcpy(A_device, A, sizeof(float)*A_GPU_Row_End*A_Column, cudaMemcpyHostToDevice);
     cudaMemcpy(B_device, B, sizeof(float)*B_Column*B_Row, cudaMemcpyHostToDevice);
 
-    cudaMalloc(&Ac, m*n*sizeof(unsigned int)/32);
-    cudaMalloc(&Bc, n*k*sizeof(unsigned int)/32);
+    cudaMalloc(&Ac, (size_t)((m*n*sizeof(unsigned int))/32));
+    cudaMalloc(&Bc, (size_t)((n*k*sizeof(unsigned int))/32));
     cudaMalloc(&C_Device, sizeof(float)*m*k);
    
   
@@ -73,7 +73,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     cudaMemcpy(&Ac[A_Column*A_CPU_Row_Start], aHostConcat, A_Column*(A_Row-A_CPU_Row_Start)*sizeof(unsigned int),
                 cudaMemcpyHostToDevice);
     
-    // call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
+    call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
     cudaDeviceSynchronize();
     // // timer.stop("Concat");
     // // timer.print("Concat", 1);
@@ -189,7 +189,7 @@ int main(){
 
     std::cout << "Right before CPU_GPU " << std::endl;
 
-    CPU_GPU_Xor(A, B, C, 1, 0, 1,
+    CPU_GPU_Xor(A, B, C, 1, 1, 1,
                             A_Row, A_Column,
                             B_Row, B_Column,
                             C_Row, C_Column,
