@@ -70,8 +70,8 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     concatenate_rows_serial(&A[A_Column*A_CPU_Row_Start], aHostConcat, 
                                 A_Row-A_CPU_Row_Start, A_Column);
 
-    // cudaMemcpy(&Ac[A_Column*A_CPU_Row_Start], aHostConcat, A_Column*(A_Row-A_CPU_Row_Start)*sizeof(unsigned int),
-    //             cudaMemcpyHostToDevice);
+    cudaMemcpy(&Ac[A_Column*A_CPU_Row_Start], aHostConcat, A_Column*(A_Row-A_CPU_Row_Start)*sizeof(unsigned int),
+                cudaMemcpyHostToDevice);
     
     // call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
     // cudaDeviceSynchronize();
