@@ -257,7 +257,7 @@ void call_GPU_concatenate_cols(int n, int m, int k, float* B, float* Bc){
 }
 void call_GPU_xnor(int n, int m, int k, float* Ac, float* Bc, float* C);
 
-    # Launching xnor_kernel
+    // # Launching xnor_kernel
     block_size = 16
     // block = (block_size,block_size,1)
     // grid = (k / block_size + 1, m / block_size + 1) # better too many blocks than too little
