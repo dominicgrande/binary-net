@@ -75,11 +75,11 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     //int n, int m, int k, float* B, float* Bc
     call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
     cudaDeviceSynchronize();
-    timer.start("B timer");
+
+    timer.start("B");
     cudaMemcpy(B_Host, B_device, sizeof(unsigned int)*B_Column*B_Row/32, cudaMemcpyDeviceToHost);
-    cudaDeviceSynchronize();
-    timer.stop("B timer");
-    timer.print("B timer", 1);
+    timer.stop("B");
+    timer.print("B", 1);
     // unsigned int* bHostConcat = new unsigned int[B_Row*(B_Column-B_CPU_Col_Start)];
     // concatenate_cols_serial(B, bHostConcat, B_Row, B_CPU_Col_Start);
     // cudaMemcpy(&Bc[A_row], bHostConcat, B_Row*(B_Column-B_CPU_Col_Start)*sizeof(unsigned int), cudaMemcpyHostToDevice);
