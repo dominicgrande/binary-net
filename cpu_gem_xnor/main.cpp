@@ -175,6 +175,8 @@ int main(){
 
     unsigned int *Bc_Host = new unsigned int[B_Row*B_Column/32];
 
+    std::cout << "Right before CPU_GPU " << std::endl;
+
     CPU_GPU_Xor(A, B, C, 1, 0, 1,
                             A_Row, A_Column,
                             B_Row, B_Column,
