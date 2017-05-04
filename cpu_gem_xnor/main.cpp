@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <thread>
 #include <assert.h>
-#import "xor.h"
+#include "xor.h"
 
 
 void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, float alpha_3,
@@ -25,7 +25,8 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
 
     // Allocate
     timer.start("Allocation");
-    float * Ac, Bc;
+    float *Ac;
+    float *Bc;
 
     // const int A_GPU_Row     = (int) A_Row * alpha;
     // const int A_CPU_Row     = A_Row - A_GPU_Row;
@@ -40,10 +41,14 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
 
     float *A_device;
     float *B_device;
-    float* C_Device;
+    float *C_Device;
 
     
-    cudaMalloc(&A_device, A_GPU_Row_end*n*sizeof(float));
+    int m = A_Row;
+    int n = A_Column;
+    int k = B_Column;
+
+    cudaMalloc(&A_device, A_GPU_Row_End*n*sizeof(float));
     cudaMalloc(&B_device, n*B_GPU_Col_End*sizeof(float));
 
     cudaMemcpy(A_device, A, sizeof(float)*A_GPU_Row_End*A_Column, cudaMemcpyHostToDevice);
@@ -115,8 +120,6 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     timer.start("Deallocation");
     // free(h_in_out);
     // free(h_flags);
-    cudafree(Ac); 
-    cudafree(Bc); 
     timer.stop("Deallocation");
     timer.print("Deallocation", 1);
 
@@ -165,7 +168,7 @@ int main(){
     for (int i=0; i<B_Row*B_Column; i++)
         B[i] = 1.0;
 
-    void CPU_GPU_Xor(A, B, C, 0.5, 0.5, 0.5,
+    CPU_GPU_Xor(A, B, C, 0.5, 0.5, 0.5,
                             A_Row, A_Column,
                             B_Row, B_Column,
                             C_Row, C_Column,
