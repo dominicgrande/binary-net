@@ -65,44 +65,42 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
 
     //n, m, A, A_c
     // timer.start("Concat");
-    call_GPU_concatenate_rows(A_Column, A_GPU_Row_End, A_device, Ac);
-    unsigned int* aHostConcat = new unsigned int[A_Column*(A_Row-A_CPU_Row_Start)];
-    concatenate_rows_serial(&A[A_Column*A_CPU_Row_Start], aHostConcat, 
-                                A_Row-A_CPU_Row_Start, A_Column);
+    // call_GPU_concatenate_rows(A_Column, A_GPU_Row_End, A_device, Ac);
+    // unsigned int* aHostConcat = new unsigned int[A_Column*(A_Row-A_CPU_Row_Start)];
+    // concatenate_rows_serial(&A[A_Column*A_CPU_Row_Start], aHostConcat, 
+    //                             A_Row-A_CPU_Row_Start, A_Column);
 
-    cudaMemcpy(&Ac[A_Column*A_CPU_Row_Start], aHostConcat, A_Column*(A_Row-A_CPU_Row_Start)*sizeof(unsigned int),
-                cudaMemcpyHostToDevice);
-
-    //int n, int m, int k, float* B, float* Bc
+    // cudaMemcpy(&Ac[A_Column*A_CPU_Row_Start], aHostConcat, A_Column*(A_Row-A_CPU_Row_Start)*sizeof(unsigned int),
+    //             cudaMemcpyHostToDevice);
     
-    call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
-    cudaDeviceSynchronize();
-    // timer.stop("Concat");
-    // timer.print("Concat", 1);
+    // call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
+    // cudaDeviceSynchronize();
+    // // timer.stop("Concat");
+    // // timer.print("Concat", 1);
     
 
-    // timer.start("B");
-    cudaMemcpy(B_Host, B_device, sizeof(unsigned int)*B_Column*B_Row/32, cudaMemcpyDeviceToHost);
-    // timer.stop("B");
-    // timer.print("B", 1);
-    // unsigned int* bHostConcat = new unsigned int[B_Row*(B_Column-B_CPU_Col_Start)];
-    // concatenate_cols_serial(B, bHostConcat, B_Row, B_CPU_Col_Start);
-    // cudaMemcpy(&Bc[A_row], bHostConcat, B_Row*(B_Column-B_CPU_Col_Start)*sizeof(unsigned int), cudaMemcpyHostToDevice);
+    // // timer.start("B");
+    // cudaMemcpy(B_Host, B_device, sizeof(unsigned int)*B_Column*B_Row/32, cudaMemcpyDeviceToHost);
+    // // timer.stop("B");
+    // // timer.print("B", 1);
+    // // unsigned int* bHostConcat = new unsigned int[B_Row*(B_Column-B_CPU_Col_Start)];
+    // // concatenate_cols_serial(B, bHostConcat, B_Row, B_CPU_Col_Start);
+    // // cudaMemcpy(&Bc[A_row], bHostConcat, B_Row*(B_Column-B_CPU_Col_Start)*sizeof(unsigned int), cudaMemcpyHostToDevice);
                             
-    // timer.start("Kernel");
-    call_GPU_xnor(A_Column, A_Row, B_Column, Ac, Bc, C_Device);
-    cudaDeviceSynchronize();
-    // timer.stop("Kernel");
-    // timer.print("Kernel", 1);
+    // // timer.start("Kernel");
+    // call_GPU_xnor(A_Column, A_Row, B_Column, Ac, Bc, C_Device);
+    // cudaDeviceSynchronize();
+    // // timer.stop("Kernel");
+    // // timer.print("Kernel", 1);
 
-    // timer.start("Deallocation");
-    cudaMemcpy(C, C_Device, C_Column*C_Row*sizeof(unsigned int), cudaMemcpyDeviceToHost);
-    cudaFree(A_device);
-    cudaFree(B_device);
-    cudaFree(Ac);
-    cudaFree(Bc);
-    cudaFree(C_Device);
-    delete aHostConcat;
+    // // timer.start("Deallocation");
+    // cudaMemcpy(C, C_Device, C_Column*C_Row*sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    // cudaFree(A_device);
+    // cudaFree(B_device);
+    // cudaFree(Ac);
+    // cudaFree(Bc);
+    // cudaFree(C_Device);
+    // delete aHostConcat;
      timer.stop("Allocation");
     timer.print("Allocation", 1);
     
