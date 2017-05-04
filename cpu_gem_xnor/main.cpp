@@ -74,6 +74,10 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
 
     //int n, int m, int k, float* B, float* Bc
     call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
+    timer.start("B timer");
+    cudaMemcpy(B_Host, B_device, sizeof(unsigned int)*B_Column*B_Row/32, cudaMemcpyDeviceToHost);
+    timer.stop("B timer");
+    timer.print("B timer", 1);
     // unsigned int* bHostConcat = new unsigned int[B_Row*(B_Column-B_CPU_Col_Start)];
     // concatenate_cols_serial(B, bHostConcat, B_Row, B_CPU_Col_Start);
     // cudaMemcpy(&Bc[A_row], bHostConcat, B_Row*(B_Column-B_CPU_Col_Start)*sizeof(unsigned int), cudaMemcpyHostToDevice);
@@ -168,11 +172,13 @@ int main(){
     for (int i=0; i<B_Row*B_Column; i++)
         B[i] = 1.0;
 
-    CPU_GPU_Xor(A, B, C, 0.5, 0.5, 0.5,
+    unsigned int *Bc_Host = new unsigned int[B_Row*B_Column/32];
+
+    CPU_GPU_Xor(A, B, C, 1, 0, 1,
                             A_Row, A_Column,
                             B_Row, B_Column,
                             C_Row, C_Column,
-                            NULL, NULL);
+                            Bc_Host, NULL);
 
     // cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
     // cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
@@ -191,13 +197,13 @@ int main(){
     // cudaFree(B_device);
     // cudaFree(C_device);
 
-   for (int i=0; i<C_Column*10000; i++){
-       if( C[i] != 784){
+//    for (int i=0; i<C_Column*10000; i++){
+//        if( C[i] != 784){
 
-        std::cout << "WRONG: "<< "x: " <<i%4096 << " y: " << i/4096<< "  " << C[i] << std::endl;
+//         std::cout << "WRONG: "<< "x: " <<i%4096 << " y: " << i/4096<< "  " << C[i] << std::endl;
 
-       }
-   }
+//        }
+//    }
     std::cout << "ALL GOOD" << std::endl;
     
     free(A);
