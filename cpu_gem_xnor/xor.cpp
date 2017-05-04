@@ -1,4 +1,5 @@
 #include "xor.h"
+#include "kernel.h"
 #include <iostream>
 #include <iomanip>
 
@@ -27,19 +28,19 @@ int rowFirst, int columnFirst, int rowSecond, int columnSecond)
 	}
 }
 
-unsigned int concatenate(float* array)
-{
-    unsigned int rvalue=0;
-    unsigned int sign;
+// unsigned int concatenate(float* array)
+// {
+//     unsigned int rvalue=0;
+//     unsigned int sign;
     
-    for (int i = 0; i < 32; i++)
-    {
-        sign = (array[i]>=0);
-        rvalue = rvalue | (sign<<i);
-    }
+//     for (int i = 0; i < 32; i++)
+//     {
+//         sign = (array[i]>=0);
+//         rvalue = rvalue | (sign<<i);
+//     }
     
-    return rvalue;
-}
+//     return rvalue;
+// }
 
 void concatenate_rows_serial(float* input, unsigned int* output, 
                                 int row, int column){
@@ -104,7 +105,7 @@ int main(){
     for (int x=0; x<32; x++)
     {
         for (int y=0; y<32; y++)
-            std::cout << C_Shrunk[x*32+y]) << " " ;
+            std::cout << C_Shrunk[x*32+y] << " " ;
             // std::cout << std::setbase(16) << std::showbase <<(int)(C_Shrunk[x*32+y]) << " " ;
 
         std::cout << std::endl;

@@ -102,7 +102,7 @@ __global__ void transpose(float* A, float* B, int m, int n)
 
 
 // 32 single float array ->  32 bits unsigned int
-__device__ unsigned int concatenate(float* array)
+__device__ __host__ unsigned int concatenate(float* array)
 {
     unsigned int rvalue=0;
     unsigned int sign;
