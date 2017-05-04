@@ -172,7 +172,7 @@ int main(){
                             A_Row, A_Column,
                             B_Row, B_Column,
                             C_Row, C_Column,
-                            NULL, NULL)
+                            NULL, NULL);
 
     // cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
     // cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
