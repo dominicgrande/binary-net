@@ -11,7 +11,7 @@
 #include <thread>
 #include <assert.h>
 
-void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
+void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
                   int A_Row, int A_Column,
                   int B_Row, int B_Column,
                   int C_Row, int C_Column,
@@ -23,7 +23,7 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     // Allocate
     timer.start("Allocation");
 
-    const int A_GPU_Row     = (int) A_Row * alpha;
+    const int A_GPU_Row     = (int)( A_Row * alpha);
     const int A_CPU_Row     = A_Row - A_GPU_Row;
 
     timer.stop("Allocation");
@@ -37,14 +37,16 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
 
     timer.start("Kernel Call");
     //Changed the A_GPU_Row start with altered alpha value
-    call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
-                                 A_GPU_Row, C_Column, B, A, C);
-    printf("Made it after GPU kernel. Need sync\n");
     float* temp_A_Host;
-    if (alpha<1){
-        temp_A_Host = (float *)malloc(sizeof(float)*A_CPU_Row*A_Column);
+    temp_A_Host = (float *)malloc(sizeof(float)*A_CPU_Row*A_Column);
+    cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
+    call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
+                                 A_GPU_Row, C_Column, B, A, C,At);
+    printf("Made it after GPU kernel. Need sync\n");
 
-        cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
+
+    if (alpha<1.0){
+
 
         printf("Memcpy is no good.\n");
 
@@ -64,8 +66,8 @@ void CPU_GPU_Gemm(float * A, float * B, float * C, float alpha,
     // Launch CPU threads
     // std::thread main_thread(run_cpu_threads, h_in_out, h_in_out, h_flags, p.n, p.m, p.pad, p.n_threads, p.n_gpu_threads, n_tasks, p.alpha);
 
-    cudaDeviceSynchronize();
     cudaMemcpy(&C[A_GPU_Row * C_Column], C_Host, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice);
+    cudaDeviceSynchronize();
     timer.stop("Kernel Call");
     timer.print("Kernel Call", 1);
     // main_thread.join();
@@ -116,10 +118,12 @@ void serialMatrixMultiply(float *A, float *B, float *C,
 int main(){
 
     float* A;
+    float* At;
     float* B;
     float* C;
 
     float* A_device;
+    float* At_device;
     float* B_device;
     float* C_device;
 
@@ -132,15 +136,19 @@ int main(){
 
     C_Row = A_Row;
     C_Column = B_Column;
-    float alpha = .0101;
+// float alpha = 1.0;
+    float alpha = 0.8;
     // float alpha = .0000;
     // float alpha = 0.0001;
 
     A = (float *)malloc(A_Row*A_Column*sizeof(float));
+    At = (float *)malloc(A_Row*A_Column*sizeof(float));
     B = (float *)malloc(B_Row*B_Column*sizeof(float));
     C = (float *)malloc(C_Row*C_Column*sizeof(float));
 
+
     cudaMalloc(&A_device, A_Row*A_Column*sizeof(float));
+    cudaMalloc(&At_device, A_Row*A_Column*sizeof(float));
     cudaMalloc(&B_device, B_Row*B_Column*sizeof(float));
     cudaMalloc(&C_device, C_Row*C_Column*sizeof(float));
 
@@ -148,18 +156,18 @@ int main(){
         A[i] = 1.0;
 
     for (int i=0; i<B_Row*B_Column; i++)
-        B[i] = 1.0;
+        B[i] = 0.5;
 
     cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
     cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
 
     printf("After memcpy\n");
 
-    CPU_GPU_Gemm(A_device, B_device, C_device, alpha,
+    CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,
                   A_Row, A_Column,
                   B_Row, B_Column,
                   C_Row, C_Column,
-                  B, C);
+                  B,C );
 
     cudaMemcpy(C, C_device, sizeof(float)*C_Column*C_Row, cudaMemcpyDeviceToHost);
 
@@ -167,13 +175,11 @@ int main(){
     cudaFree(B_device);
     cudaFree(C_device);
 
-   for (int i=0; i<C_Column*10000; i++){
-       if( C[i] != 784){
-
-        std::cout << "WRONG: "<< "x: " <<i%4096 << " y: " << i/4096<< "  " << C[i] << std::endl;
-
+    for (int i=0; i<C_Column*10000; i++){
+      if( C[i] != 784*.5){
+//        std::cout << "WRONG: "<< "x: " <<i%4096 << " y: " << i/4096<< "  " << C[i] << std::endl;
        }
-   }
+    }
     std::cout << "ALL GOOD" << std::endl;
     
     free(A);
