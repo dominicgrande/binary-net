@@ -92,7 +92,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     cudaMalloc(&A_device, A_GPU_Row_End*n*sizeof(float));
     cudaMalloc(&B_device, n*B_GPU_Col_End*sizeof(float));
 
-    cudaMemcpy(A_device, A, sizeof(float)*A_GPU_Row_End*A_Column, cudaMemcpyHostToDevice);
+    cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
     cudaMemcpy(B_device, B, sizeof(float)*B_Column*B_Row, cudaMemcpyHostToDevice);
 
     cudaMalloc(&Ac, (size_t)((m*n*sizeof(unsigned int))/32));
@@ -107,7 +107,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     //n, m, A, A_c
     // timer.start("Concat");
     call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac);
-    unsigned int* aHostConcat = new unsigned int[A_Column*(A_Row-A_CPU_Row_Start)/32];
+    unsigned int* aHostConcat = new unsigned int[(m*n)/32*alpha];
     //concatenate_rows_serial(&A[A_Column*A_CPU_Row_Start], aHostConcat, 
                                 // A_Row-A_CPU_Row_Start, A_Column);
 
@@ -115,15 +115,15 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
                 // cudaMemcpyHostToDevice);
     
     call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
-    unsigned int* bHostConcat = new unsigned int[B_Row*(B_Column-B_CPU_Col_Start)/32];
+    unsigned int* bHostConcat = new unsigned int[(n*k)/32*alpha];
     cudaDeviceSynchronize();
     // // timer.stop("Concat");
     // // timer.print("Concat", 1);
     
 
       timer.start("B");
-     cudaMemcpy(aHostConcat, &Ac[(A_Column*A_GPU_Row_End)/32], (sizeof(unsigned int)*(A_Row-A_GPU_Row_End)*A_Column)/32, cudaMemcpyDeviceToHost);
-     cudaMemcpy(bHostConcat, &Bc[(B_Row*B_GPU_Col_End)/32], (sizeof(unsigned int)*(B_Column-B_GPU_Col_End)*B_Row)/32, cudaMemcpyDeviceToHost);
+     cudaMemcpy(aHostConcat, &Ac[(A_Column*A_GPU_Row_End)/32], sizeof(unsigned int)(m*n)/32*alpha, cudaMemcpyDeviceToHost);
+     cudaMemcpy(bHostConcat, &Bc[(B_Row*B_GPU_Col_End)/32], sizeof(unsigned int)*(n*k)/32*alpha, cudaMemcpyDeviceToHost);
      
      for (int i = 0; i< B_Row*(B_Column-B_CPU_Col_Start)/32; i++){
          std::cout << "bHost value is: " << bHostConcat[i] << std::endl;
