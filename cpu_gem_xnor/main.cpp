@@ -105,12 +105,12 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // cudaMalloc(&Bc, (size_t)((n*k*sizeof(unsigned int))/32));
     // cudaMalloc(&C_Device, sizeof(float)*m*k);
    
-    // cudaStream_t kernel_stream;
-    // cudaStream_t data_stream;
-    // cudaStreamCreate(&kernel_stream);
-    // cudaStreamCreate(&data_stream); 
+     cudaStream_t kernel_stream;
+     cudaStream_t data_stream;
+     cudaStreamCreate(&kernel_stream);
+     cudaStreamCreate(&data_stream); 
 
-    // call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac, kernel_stream);
+     call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac, kernel_stream);
     // unsigned int* aHostConcat = new unsigned int[(A_CPU_Row_Start)*A_Column];
     //  unsigned int* bHostConcat = new unsigned int[(B_Column*B_Row)/32];
 
