@@ -156,7 +156,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // // timer.start("Deallocation");
     // cudaMemcpy(C, C_Device, C_Column*C_Row*sizeof(unsigned int), cudaMemcpyDeviceToHost);
     //
-    // std::cout << "Make it to after first memcpy" << std::endl;
+    std::cout << "Make it to after first memcpy" << std::endl;
     unsigned int* cHost = new unsigned int[(C_Row*C_Column)/32];
     cudaMemcpy(cHost, C_Device, (sizeof(float)*m*k)/32, cudaMemcpyHostToDevice);
 
