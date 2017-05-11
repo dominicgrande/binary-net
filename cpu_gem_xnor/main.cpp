@@ -95,6 +95,9 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     int n = A_Column;
     int k = B_Column;
 
+    unsigned int* aHostConcat = new unsigned int[(A_CPU_Row_Start)*A_Column];
+    unsigned int* bHostConcat = new unsigned int[(B_Column*B_Row)/32];
+
     // cudaMalloc(&A_device, m*n*sizeof(float));
     // cudaMalloc(&B_device, n*k*sizeof(float));
 
@@ -237,8 +240,7 @@ int main(){
     cudaStreamCreate(&data_stream); 
 
     // call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac, kernel_stream);
-    unsigned int* aHostConcat = new unsigned int[(A_CPU_Row_Start)*A_Column];
-    unsigned int* bHostConcat = new unsigned int[(B_Column*B_Row)/32];
+    
 
 
     int timex [21];
@@ -254,8 +256,8 @@ int main(){
                             C_Row, C_Column,
                             A_device, B_device,
                             C_Device, Ac,
-                            Bc, aHostConcat,
-                            bHostConcat);
+                            Bc, NULL,
+                            NULL);
 
                              std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
 
