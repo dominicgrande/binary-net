@@ -238,10 +238,15 @@ if __name__ == "__main__":
     # dot3 = theano.function([A,B], host_from_gpu(xnor_gemm(A,B)))
     
     # Generating random BINARY matrices
-    a = SignNumpy(np.random.randn(m, n))
-    b = SignNumpy(np.random.randn(n, k))
-    # a = np.float32(np.random.randn(m, n))
-    # b = np.float32(np.random.randn(n, k))
+    # a = SignNumpy(np.random.randn(m, n))
+    # b = SignNumpy(np.random.randn(n, k))
+    a = np.float32(np.random.randn(m, n))
+    b = np.float32(np.random.randn(n, k))
+
+    a = np.ones(784 * 10000).astype(np.float32)
+    b = np.ones(784 * 4096).astype(np.float32)
+
+    b = np.float32(np.random.randn(n, k))
 
     #start_time = time.time()
     #c1 = dot1(a,b)

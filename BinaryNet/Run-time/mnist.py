@@ -1,4 +1,4 @@
-
+import gemm as gemm_lib
 import sys
 import os
 import time
@@ -94,6 +94,9 @@ if __name__ == "__main__":
     with np.load('mnist_parameters.npz') as f:
         param_values = [f['arr_%d' % i] for i in range(len(f.files))]
     lasagne.layers.set_all_param_values(mlp, param_values)
+
+    gemm_lib.Load_Weights(param_values);
+    gemm_lib.initMemory(np.float(.8),np.int32(0), np.int32(10000), np.int32(784), np.int32(784), np.int32(4096), np.int32(10000), np.int32(4096) );
 
     # Binarize the weights
     params = lasagne.layers.get_all_params(mlp)
