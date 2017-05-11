@@ -37,7 +37,6 @@ void matrixMulFunc(unsigned int *A, unsigned int *B, unsigned int *C, int numRow
             for(int i = ii; i < ii + ib; i += 2 ){
                 if (i < dimensions-1 && j < dimensions-1 && k < dimensions-1){
 		            int acc00, acc01, acc10, acc11;
-//                  std::cout << "Current i value " << i << ". The Current K value is " << k << std::endl;                
                     if (kk == 0)
                         acc00 = acc01 = acc10 = acc11 = 0;
                     else {
@@ -144,9 +143,9 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     third.join();
     fourth.join();
 
-     cudaDeviceSynchronize();
-    
-    //  std::cout << "First memcpy" << std::endl;
+    cudaStreamSynchronize(kernel_stream);
+
+    //std::cout << "First memcpy" << std::endl;
     //  std::cout << "The value of B_Column - B_CPU_Row_Start " << B_Column - B_CPU_Col_Start << std::endl;
     //  std::cout << "The value of B_Column is " << B_Column << std::endl;
     //  std::cout << "The value of B_CPU_Col_Start " << B_CPU_Col_Start << std::endl;
@@ -156,7 +155,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // // timer.start("Deallocation");
     // cudaMemcpy(C, C_Device, C_Column*C_Row*sizeof(unsigned int), cudaMemcpyDeviceToHost);
     //
-    std::cout << "Make it to after first memcpy" << std::endl;
+    //std::cout << "Make it to after first memcpy" << std::endl;
     unsigned int* cHost = new unsigned int[(C_Row*C_Column)/32];
     cudaMemcpy(cHost, C_Device, (sizeof(float)*m*k)/32, cudaMemcpyHostToDevice);
 
