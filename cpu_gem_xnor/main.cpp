@@ -68,10 +68,10 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
                   int A_Row, int A_Column,
                   int B_Row, int B_Column,
                   int C_Row, int C_Column,
-                  float* A_Device, float* B_device,
+                  float* A_device, float* B_device,
                   float* C_Device, unsigned int* Ac,
-                  unsigned int* Bc, unsigned int* aHostConcat,
-                  unsigned int* bHostConcat){
+                  unsigned int* Bc, unsigned int* aHostConcat2,
+                  unsigned int* bHostConcat2){
 
     Timer        timer;
     cudaError_t  cudaStatus;
@@ -280,8 +280,8 @@ int main(){
     cudaFree(Ac);
     cudaFree(Bc);
     cudaFree(C_Device);
-    delete aHostConcat;
-    delete bHostConcat;
+    // delete aHostConcat;
+    // delete bHostConcat;
 
     // cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
     // cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
