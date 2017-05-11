@@ -1,5 +1,5 @@
 CXX=nvcc
-CXX_FLAGS=-std=c++11
+CXX_FLAGS=-std=c++11 -O3 -use_fast_math -Xptxas --verbose
 
 ifndef CHAI_CUDA_LIB
     $(error CHAI_CUDA_LIB not defined. This environment variable must be defined to point to the location of the CUDA library)
@@ -16,7 +16,7 @@ SRC=main.cpp kernel.cu xor.cpp
 EXE=pad
 
 all:
-	$(CXX) $(CXX_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE) -lblas
+	$(CXX) $(CXX_FLAGS) $(SRC) $(LIB) $(INC) -o $(EXE) -lblas 
 
 clean:
 	rm -f $(EXE)

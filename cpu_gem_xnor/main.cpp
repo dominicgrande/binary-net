@@ -38,10 +38,10 @@ void matrixMulFunc(unsigned int *A, unsigned int *B, unsigned int *C, int numRow
                         acc11 = C[128*(i + 1) + j + 1];
                     }
                     for (k = kk; k < kk + kb; k++){ 
-                            acc00 +=  __builtin_popcount((A[128*(i + 0)+k] ^ B[128*k+j + 0]));
-                            acc01 +=  __builtin_popcount((A[(i + 0)*128 + k] ^ B[k*128 + j + 1]));
-                            acc10 +=  __builtin_popcount((A[(i + 1)*128+ k] ^ B[k*128 + j + 0]));
-                            acc11 += __builtin_popcount((A[(i + 1)*128 + k] ^ B[k*128+j + 1]));
+                            acc00 +=  /*__builtin_popcount((*/A[128*(i + 0)+k] * B[128*k+j + 0];//));
+                            acc01 +=  /*__builtin_popcount((*/A[(i + 0)*128 + k] * B[k*128 + j + 1];//));
+                            acc10 += /* __builtin_popcount((*/A[(i + 1)*128+ k] * B[k*128 + j + 0];//));
+                            acc11 += /*__builtin_popcount((*/A[(i + 1)*128 + k] * B[k*128+j + 1];//));
                     }
                 C[128*(i + 0) + j + 0] = acc00;
                 C[128*(i + 0) + j + 1] = acc01;
@@ -107,7 +107,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     //n, m, A, A_c
     // timer.start("Concat");
     call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac);
-    unsigned int* aHostConcat = new unsigned int[A_Column*(A_Row-A_CPU_Row_Start)];
+    unsigned int* aHostConcat = new unsigned int[A_Column*(A_Row-A_CPU_Row_Start)/32];
     //concatenate_rows_serial(&A[A_Column*A_CPU_Row_Start], aHostConcat, 
                                 // A_Row-A_CPU_Row_Start, A_Column);
 
@@ -115,7 +115,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
                 // cudaMemcpyHostToDevice);
     
     call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc);
-    unsigned int* bHostConcat = new unsigned int[B_Row*(B_Column-B_CPU_Col_Start)];
+    unsigned int* bHostConcat = new unsigned int[B_Row*(B_Column-B_CPU_Col_Start)/32];
     cudaDeviceSynchronize();
     // // timer.stop("Concat");
     // // timer.print("Concat", 1);
@@ -136,11 +136,13 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
      int ib=16;
     high_resolution_clock::time_point t3 = high_resolution_clock::now();
 
+    unsigned int* cHostConcat = new unsigned int[(A_Row-A_CPU_Row_Start)*(B_Column-B_CPU_Col_Start)/32];
+
     int dimen = A_CPU_Row_Start*B_CPU_Col_Start;
-    std::thread first (matrixMulFunc, A, B, C, A_CPU_Row_Start, dimen);
-    std::thread second (matrixMulFunc, A, B, C, A_CPU_Row_Start+ib, dimen);
-    std::thread third (matrixMulFunc, A, B, C, A_CPU_Row_Start+ib*2, dimen);
-    std::thread fourth (matrixMulFunc, A, B, C, A_CPU_Row_Start+ib*3, dimen);
+    std::thread first (matrixMulFunc, aHostConcat, bHostConcat, cHostConcat, A_CPU_Row_Start, dimen);
+    std::thread second (matrixMulFunc, aHostConcat, bHostConcat, cHostConcat, A_CPU_Row_Start+ib, dimen);
+    std::thread third (matrixMulFunc, aHostConcat, bHostConcat, cHostConcat, A_CPU_Row_Start+ib*2, dimen);
+    std::thread fourth (matrixMulFunc, aHostConcat, bHostConcat, cHostConcat, A_CPU_Row_Start+ib*3, dimen);
     first.join();
     second.join();
     third.join();
@@ -152,9 +154,20 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
      cudaDeviceSynchronize();
     // // timer.stop("Kernel");
     // // timer.print("Kernel", 1);
-
+    cudaMemcpy(&C_Device[A_GPU_Row_End*128+B_GPU_Col_End], cHostConcat, sizeof(unsigned int)*(A_Row-A_CPU_Row_Start)*(B_Column-B_CPU_Col_Start)/32, cudaMemcpyHostToDevice);
     // // timer.start("Deallocation");
     // cudaMemcpy(C, C_Device, C_Column*C_Row*sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    //
+    unsigned int* cHost = new unsigned int[C_Row*C_Column/32];
+    cudaMemcpy(cHost, C_Device, sizeof(unsigned int)*C_Row*C_Column/32, cudaMemcpyHostToDevice);
+
+
+    std::cout << "The start value is: " << (A_CPU_Row_Start*C_Column+B_CPU_Col_Start)/32 << std::endl;
+    std::cout << "The end value is: " << (C_Row*128)/32 << std::endl;
+    for (int i=(A_CPU_Row_Start*128)/32; i<(C_Row*C_Column)/32; i++){
+    std::cout << cHost[i] << std::endl;
+    }
+
     cudaFree(A_device);
     cudaFree(B_device);
     cudaFree(Ac);
@@ -249,7 +262,7 @@ int main(){
 
     std::cout << "Right before CPU_GPU " << std::endl;
 
-    CPU_GPU_Xor(A, B, C, 1, 1, 1,
+    CPU_GPU_Xor(A, B, C, 0.8, 0.8, 0.8,
                             A_Row, A_Column,
                             B_Row, B_Column,
                             C_Row, C_Column,
