@@ -102,7 +102,7 @@ __global__ void transpose(float* A, float* B, int m, int n)
 
 
 // 32 single float array ->  32 bits unsigned int
-__device__ __host__ unsigned int concatenate(float* array)
+__host__ __device__ unsigned int concatenate(float* array)
 {
     unsigned int rvalue=0;
     unsigned int sign;
@@ -127,7 +127,6 @@ __global__ void concatenate_cols_kernel(float *a, unsigned int *b, int m, int n)
 {   
 
     int j = blockIdx.x * blockDim.x + threadIdx.x;
-    
     if(j<n){
         float * array = new float[32];
         for(int i=0; i<m; i+=32){
@@ -227,7 +226,8 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 
 
 
-void call_GPU_concatenate_rows(int n, int m, float* A, unsigned int* Ac){
+void call_GPU_concatenate_rows(int n, int m, float* A, unsigned int* Ac,
+    cudaStream_t kernel_stream){
 
     int block_size = 64;
 
@@ -239,10 +239,11 @@ void call_GPU_concatenate_rows(int n, int m, float* A, unsigned int* Ac){
     dim3 dimGrid(m*n/(block_size*32)+1, 1, 1);
 
     // concatenate_rows_kernel(A,Ac, np.intc(m*n/32), block= block, grid=grid)
-    concatenate_rows_kernel<<<dimGrid, dimBlock>>>(A, Ac, m*n/32);
+    concatenate_rows_kernel<<<dimGrid, dimBlock, 0, kernel_stream>>>(A, Ac, m*n/32);
 
 }
-void call_GPU_concatenate_cols(int n, int m, int k, float* B, unsigned int* Bc){
+void call_GPU_concatenate_cols(int n, int m, int k, float* B, unsigned int* Bc,
+    cudaStream_t kernel_stream){
 
     int block_size = 64;
 
@@ -250,9 +251,10 @@ void call_GPU_concatenate_cols(int n, int m, int k, float* B, unsigned int* Bc){
     dim3 dimGrid(k/(block_size)+1, 1, 1);
 
     // concatenate_cols_kernel(B,Bc, np.intc(n), np.intc(k), block= block, grid=grid)
-    concatenate_cols_kernel<<<dimGrid, dimBlock>>>(B, Bc, n, k);
+    concatenate_cols_kernel<<<dimGrid, dimBlock, 0, kernel_stream>>>(B, Bc, n, k);
 }
-void call_GPU_xnor(int n, int m, int k, unsigned int* Ac, unsigned int* Bc, float* C){
+void call_GPU_xnor(int n, int m, int k, unsigned int* Ac, unsigned int* Bc,
+    float* C, cudaStream_t kernel_stream){
 
 
     int block_size = 16;
@@ -262,6 +264,6 @@ void call_GPU_xnor(int n, int m, int k, unsigned int* Ac, unsigned int* Bc, floa
     dim3 dimGrid_xnor(k / block_size + 1, m / block_size + 1, 1);
 
     // xnor_kernel(Ac,Bc,C[0], np.intc(m), np.intc(n/32.), np.intc(k), block= block, grid=grid)
-    xnor_gemm<<<dimGrid_xnor,dimBlock_xnor>>>(Ac, Bc, C, m, (int)n/32.0 , k); 
+    xnor_gemm<<<dimGrid_xnor,dimBlock_xnor, 0, kernel_stream>>>(Ac, Bc, C, m, (int)n/32.0 , k); 
 
 }
