@@ -177,9 +177,9 @@ int main(){
     float* B;
     float* C;
 
-    float* A_device;
-    float* B_device;
-    float* C_device;
+    // float* A_device;
+    // float* B_device;
+    // float* C_device;
 
     int A_Row, A_Column, B_Row, B_Column, C_Row, C_Column;
 
