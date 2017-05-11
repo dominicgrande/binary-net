@@ -59,13 +59,22 @@ void CPU_GPU_Gemm(unsigned long A_ptr, unsigned long B_ptr, unsigned long C_ptr,
     const int A_GPU_Row     = (int)( A_Row * alpha);
     const int A_CPU_Row     = A_Row - A_GPU_Row;
 
-    float* temp_A_Host;
     int temp_A_Host_Size = sizeof(float)*A_CPU_Row*A_Column;
+
+    float * B_Host_temp =(float *) malloc( 100 * sizeof(float));
+    cudaMemcpy(B_Host_temp,B, 100 * sizeof(float),cudaMemcpyHostToDevice);
+    printf("hihi");
+    for(int i =0; i < 100; i ++){
+      if (B_Host_temp[i] != B_Host[i]){
+        printf("wronrg %d, %f,%f\n",i,B_Host_temp[i],B_Host[i] );
+      }
+
+    }
 
 
     // timer.start("Kernel Call");
     //Changed the A_GPU_Row start with altered alpha value
-    cudaMemcpyAsync(temp_A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
+    cudaMemcpyAsync(A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
     call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
                                  A_GPU_Row, C_Column, B, A, C,At, kernel_stream);
 
@@ -111,6 +120,10 @@ void Load_Weights(pybind11::array_t<float> vec)
 //   cudaError_t error = cudaMalloc(&gpu_ptr, size * sizeof(double));
 
     B_Host = (float*)info_i.ptr;
+    printf("Host value");
+    for(int i = 0; i < 50 ; i++){
+      printf("%f,",B_Host[i]);
+    }
 }
 void initMemory(float alpha, int pinned_memory_input,
                 int A_Row, int A_Column,

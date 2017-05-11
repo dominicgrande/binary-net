@@ -1,8 +1,5 @@
-
-import time
-
 import numpy as np
-import theano
+import time
 import theano.tensor as T
 
 import theano.misc.pycuda_init
@@ -63,7 +60,16 @@ class Gemm(cuda.GpuOp):
             k = B.shape[1]
             assert n == B.shape[0] # Otherwise GEMM is impossible
             assert n%16 == 0 # Block size
-            
+
+
+            """
+            hostA = np.array(A, dtype=np.float32).astype(np.float32)
+            print hostA
+            hostB = np.array(B, dtype=np.float32).astype(np.float32)
+            print hostB
+            """
+            print "came here"
+
             # output
             output_shape = (m, k)
             C = outputs[0]
@@ -76,12 +82,13 @@ class Gemm(cuda.GpuOp):
             block = (block_size,block_size,1)
             grid = (k / block_size+1, m / block_size+1) # better too many blocks than too little
 
-            # gemm_kernel(A,B,C[0], np.intc(m), np.intc(n), np.intc(k), block= block, grid=grid)
+            gemm_kernel(A,B,C[0], np.intc(m), np.intc(n), np.intc(k), block= block, grid=grid)
             A_gpu_pointer = A.gpudata
             B_gpu_pointer = B.gpudata
             C_gpu_pointer = C[0].gpudata
 
-            gemm_lib.CPU_GPU_Gemm(  A_gpu_pointer, B_gpu_pointer, C_gpu_pointer, np.float32(.8),
+            gemm_lib.CPU_GPU_Gemm(  A_gpu_pointer, B_gpu_pointer,
+                    C_gpu_pointer, np.float32(1),
                                     np.int32(10000), np.int32(784), 
                                     np.int32(784), np.int32(4096), 
                                     np.int32(10000), np.int32(4096) );
