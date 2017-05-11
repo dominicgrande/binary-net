@@ -68,15 +68,15 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
                   int A_Row, int A_Column,
                   int B_Row, int B_Column,
                   int C_Row, int C_Column,
-                  unsigned int* B_Host, float* C_Host){
+                  float* A_Device, float* B_device,
+                  float* C_Device, unsigned int* Ac,
+                  unsigned int* Bc, unsigned int* aHostConcat,
+                  unsigned int* bHostConcat){
 
     Timer        timer;
     cudaError_t  cudaStatus;
 
-    // Allocate
-    timer.start("Allocation");
-    unsigned int *Ac;
-    unsigned int *Bc;
+   
 
     const int A_GPU_Row_End = roundUp((int)ceil(alpha_1*A_Row));
     const int A_CPU_Row_Start = A_Row - A_GPU_Row_End;
@@ -84,61 +84,52 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     const int B_GPU_Col_End = roundUp((int)ceil(alpha_2*B_Column));
     const int B_CPU_Col_Start = B_Column - B_GPU_Col_End;
 
-    std::cout << "CPU Row Start " << A_CPU_Row_Start << " CPU Col Start " << B_CPU_Col_Start << std::endl; 
+    // float *A_device;
+    // float *B_device;
+    // float *C_Device;
 
-    //Need to implement alpha value for computation
+    // unsigned int *Ac;
+    // unsigned int *Bc;
 
-    float *A_device;
-    float *B_device;
-    float *C_Device;
+    // int m = A_Row;
+    // int n = A_Column;
+    // int k = B_Column;
 
-    
-    int m = A_Row;
-    int n = A_Column;
-    int k = B_Column;
+    // cudaMalloc(&A_device, m*n*sizeof(float));
+    // cudaMalloc(&B_device, n*k*sizeof(float));
 
-    cudaMalloc(&A_device, m*n*sizeof(float));
-    cudaMalloc(&B_device, n*k*sizeof(float));
+    // cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
+    // cudaMemcpy(B_device, B, sizeof(float)*B_Column*B_Row, cudaMemcpyHostToDevice);
 
-    cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
-    cudaMemcpy(B_device, B, sizeof(float)*B_Column*B_Row, cudaMemcpyHostToDevice);
-
-    cudaMalloc(&Ac, (size_t)((m*n*sizeof(unsigned int))/32));
-    cudaMalloc(&Bc, (size_t)((n*k*sizeof(unsigned int))/32));
-    cudaMalloc(&C_Device, sizeof(float)*m*k);
+    // cudaMalloc(&Ac, (size_t)((m*n*sizeof(unsigned int))/32));
+    // cudaMalloc(&Bc, (size_t)((n*k*sizeof(unsigned int))/32));
+    // cudaMalloc(&C_Device, sizeof(float)*m*k);
    
-    cudaStream_t kernel_stream;
-    cudaStream_t data_stream;
-    cudaStreamCreate(&kernel_stream);
-    cudaStreamCreate(&data_stream); 
+    // cudaStream_t kernel_stream;
+    // cudaStream_t data_stream;
+    // cudaStreamCreate(&kernel_stream);
+    // cudaStreamCreate(&data_stream); 
 
-    call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac, kernel_stream);
-    unsigned int* aHostConcat = new unsigned int[(A_CPU_Row_Start)*A_Column];
-    //concatenate_rows_serial(&A[A_Column*A_CPU_Row_Start], aHostConcat, 
-                                // A_Row-A_CPU_Row_Start, A_Column);
+    // call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac, kernel_stream);
+    // unsigned int* aHostConcat = new unsigned int[(A_CPU_Row_Start)*A_Column];
+    //  unsigned int* bHostConcat = new unsigned int[(B_Column*B_Row)/32];
 
-    // cudaMemcpy(&Ac[A_Column*A_CPU_Row_Start], aHostConcat, A_Column*(A_Row-A_CPU_Row_Start)*sizeof(unsigned int),
-                // cudaMemcpyHostToDevice);
     
     cudaStreamSynchronize(kernel_stream);
     cudaMemcpyAsync(aHostConcat, &Ac[(A_Column*A_GPU_Row_End)/32], sizeof(unsigned int)*(A_CPU_Row_Start*n)/32, cudaMemcpyDeviceToHost, data_stream);
 
     call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc, kernel_stream);
-    unsigned int* bHostConcat = new unsigned int[(B_Column*B_Row)/32];
+   
     
     cudaStreamSynchronize(kernel_stream);
-
-      timer.start("B");
      //cudaMemcpy(aHostConcat, &Ac[(A_Column*A_GPU_Row_End)/32], sizeof(unsigned int)*(A_CPU_Row_Start*n)/32, cudaMemcpyDeviceToHost);
      cudaMemcpyAsync(bHostConcat, Bc, sizeof(unsigned int)*(n*k)/32, cudaMemcpyDeviceToHost, data_stream);
      
 
-     call_GPU_xnor(A_Column, A_Row, B_Column, Ac, Bc, C_Device, kernel_stream);
-
+    call_GPU_xnor(A_Column, A_Row, B_Column, Ac, Bc, C_Device, kernel_stream);
     int ib=16;
-    high_resolution_clock::time_point t3 = high_resolution_clock::now();
 
-    unsigned int* cHostConcat = new unsigned int[(A_CPU_Row_Start*k)/32]; //(B_Column-B_CPU_Col_Start)/32];
+    unsigned int* cHostConcat = new unsigned int[(A_CPU_Row_Start*k)/32]; 
 
     int dimen = A_CPU_Row_Start*B_CPU_Col_Start;
     std::thread first (matrixMulFunc, aHostConcat, bHostConcat, cHostConcat, A_CPU_Row_Start, 0, dimen);
@@ -149,82 +140,34 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     second.join();
     third.join();
     fourth.join();
-    std::cout << "Made it after CPU code" << std::endl;
-    // high_resolution_clock::time_point t4 = high_resolution_clock::now();
-    // auto secondDuration = duration_cast<milliseconds>(t4-t3).count();
 
      cudaDeviceSynchronize();
     
-     std::cout << "First memcpy" << std::endl;
-     std::cout << "The value of B_Column - B_CPU_Row_Start " << B_Column - B_CPU_Col_Start << std::endl;
-     std::cout << "The value of B_Column is " << B_Column << std::endl;
-     std::cout << "The value of B_CPU_Col_Start " << B_CPU_Col_Start << std::endl;
-     std::cout << "The new value is " << (A_CPU_Row_Start*B_CPU_Col_Start)/32 << std::endl;
-     std::cout << "The A value is " << A_CPU_Row_Start << std::endl;
+    //  std::cout << "First memcpy" << std::endl;
+    //  std::cout << "The value of B_Column - B_CPU_Row_Start " << B_Column - B_CPU_Col_Start << std::endl;
+    //  std::cout << "The value of B_Column is " << B_Column << std::endl;
+    //  std::cout << "The value of B_CPU_Col_Start " << B_CPU_Col_Start << std::endl;
+    //  std::cout << "The new value is " << (A_CPU_Row_Start*B_CPU_Col_Start)/32 << std::endl;
+    //  std::cout << "The A value is " << A_CPU_Row_Start << std::endl;
      cudaMemcpy(&C_Device[128*A_GPU_Row_End], cHostConcat, sizeof(unsigned int)*((A_CPU_Row_Start*k))/32, cudaMemcpyHostToDevice);
     // // timer.start("Deallocation");
     // cudaMemcpy(C, C_Device, C_Column*C_Row*sizeof(unsigned int), cudaMemcpyDeviceToHost);
     //
-    std::cout << "Make it to after first memcpy" << std::endl;
+    // std::cout << "Make it to after first memcpy" << std::endl;
     unsigned int* cHost = new unsigned int[(C_Row*C_Column)/32];
     cudaMemcpy(cHost, C_Device, (sizeof(float)*m*k)/32, cudaMemcpyHostToDevice);
 
 
-    std::cout << "The start value is: " << (A_CPU_Row_Start*C_Column+B_CPU_Col_Start)/32 << std::endl;
-    std::cout << "The end value is: " << (C_Row*128)/32 << std::endl;
+    // std::cout << "The start value is: " << (A_CPU_Row_Start*C_Column+B_CPU_Col_Start)/32 << std::endl;
+    // std::cout << "The end value is: " << (C_Row*128)/32 << std::endl;
 
-    cudaFree(A_device);
-    cudaFree(B_device);
-    cudaFree(Ac);
-    cudaFree(Bc);
-    cudaFree(C_Device);
-    delete aHostConcat;
-    timer.stop("Allocation");
-    timer.print("Allocation", 1);
-    
-
-    // void call_GPU_concatenate_rows(int n, int m, float* A, float* Ac);
-    // void call_GPU_concatenate_cols(int n, int m, int k, float* B, float* Bc);
-    // void call_GPU_xnor(int n, int m, int k, float* Ac, float* Bc, float* C);
-    //Changed the A_GPU_Row start with altered alpha value
-
-    // void call_GPU_concatenate_rows(A_Column, A_Row, A, Ac);
-    // printf("Made it after GPU kernel. Need sync\n");
-    // float* temp_A_Host;
-    // if (alpha<1){
-    //     temp_A_Host = (float *)malloc(sizeof(float)*A_CPU_Row*A_Column);
-
-    //     cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
-
-    //     printf("Memcpy is no good.\n");
-
-    //     cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
-    //             A_CPU_Row, B_Column, A_Column, 1, temp_A_Host, A_Column, B_Host, B_Column, 0.0, C_Host, B_Column);
-    //     free(temp_A_Host);
-    // }
-
-    // cudaDeviceSynchronize();
-    // cudaMemcpy(&C[A_GPU_Row * C_Column], C_Host, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice);
-    // timer.stop("Kernel Call");
-    // timer.print("Kernel Call", 1);
-    // main_thread.join();
-
-    // timer.print("Kernel", p.n_reps);
-
-    // Free memory
-    
-    // free(h_in_out);
-    // free(h_flags);
-    timer.stop("Deallocation");
-    timer.print("Deallocation", 1);
-
-    // Release timers
-    timer.release("Allocation");
-    timer.release("Kernel");
-    timer.release("Deallocation");
-
-    printf("Test Passed\n");
-    // return 0;
+    // cudaFree(A_device);
+    // cudaFree(B_device);
+    // cudaFree(Ac);
+    // cudaFree(Bc);
+    // cudaFree(C_Device);
+    // delete aHostConcat;
+    // timer.stop("Allocation");
 }
 
 // Main ------------------------------------------------------------------------------------------
@@ -267,11 +210,76 @@ int main(){
 
     std::cout << "Right before CPU_GPU " << std::endl;
 
+    float *A_device;
+    float *B_device;
+    float *C_Device;
+
+    unsigned int *Ac;
+    unsigned int *Bc;
+
+    int m = A_Row;
+    int n = A_Column;
+    int k = B_Column;
+
+    cudaMalloc(&A_device, m*n*sizeof(float));
+    cudaMalloc(&B_device, n*k*sizeof(float));
+
+    cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
+    cudaMemcpy(B_device, B, sizeof(float)*B_Column*B_Row, cudaMemcpyHostToDevice);
+
+    cudaMalloc(&Ac, (size_t)((m*n*sizeof(unsigned int))/32));
+    cudaMalloc(&Bc, (size_t)((n*k*sizeof(unsigned int))/32));
+    cudaMalloc(&C_Device, sizeof(float)*m*k);
+   
+    cudaStream_t kernel_stream;
+    cudaStream_t data_stream;
+    cudaStreamCreate(&kernel_stream);
+    cudaStreamCreate(&data_stream); 
+
+    // call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac, kernel_stream);
+    unsigned int* aHostConcat = new unsigned int[(A_CPU_Row_Start)*A_Column];
+    unsigned int* bHostConcat = new unsigned int[(B_Column*B_Row)/32];
+
+
+    int timex [21];
+    int iteration = 1;
+    for(int j = 0; j<=20;  j += 1){
+        alpha = j * .05;
+        int timetemp = 0;
+        for(int i = 0; i<iteration; i++){
+            std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     CPU_GPU_Xor(A, B, C, 0.8, 0.8, 0.8,
                             A_Row, A_Column,
                             B_Row, B_Column,
                             C_Row, C_Column,
-                            Bc_Host, NULL);
+                            A_Device, B_device,
+                            C_Device, Ac,
+                            Bc, aHostConcat,
+                            bHostConcat);
+
+                             std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
+
+            timetemp += (int)std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+        }
+        timex[j] = timetemp/iteration;
+        std::cout << " time: " << timetemp/iteration << std::endl;
+        
+    }
+    // std::cout << " time: " << timetemp/iteration << std::endl;
+    for(auto const& value: timex)
+    {
+        std::cout << value << ",";
+    }
+
+
+    cudaFree(A_device);
+    cudaFree(B_device);
+    cudaFree(Ac);
+    cudaFree(Bc);
+    cudaFree(C_Device);
+    delete aHostConcat;
+    delete bHostConcat;
 
     // cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
     // cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
