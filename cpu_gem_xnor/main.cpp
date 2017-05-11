@@ -122,8 +122,16 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     
 
       timer.start("B");
-     cudaMemcpy(aHostConcat, &Ac[A_Column*A_GPU_Row_End/32], sizeof(unsigned int)*(A_Row-A_GPU_Row_End)*A_Column/32, cudaMemcpyDeviceToHost);
-     cudaMemcpy(bHostConcat, &Bc[B_Row*B_GPU_Col_End/32], sizeof(unsigned int)*(B_Column-B_GPU_Col_End)*B_Row/32, cudaMemcpyDeviceToHost);
+     cudaMemcpy(aHostConcat, &Ac[(A_Column*A_GPU_Row_End)/32], (sizeof(unsigned int)*(A_Row-A_GPU_Row_End)*A_Column)/32, cudaMemcpyDeviceToHost);
+     cudaMemcpy(bHostConcat, &Bc[(B_Row*B_GPU_Col_End)/32], (sizeof(unsigned int)*(B_Column-B_GPU_Col_End)*B_Row)/32, cudaMemcpyDeviceToHost);
+     
+     for (int i = 0; i< B_Row*(B_Column-B_CPU_Col_Start)/32; i+=32){
+         std::cout << "bHost value is: " << bHostConcat[i] << std::endl;
+     }
+
+      for (int i = 0; i< (A_Row-A_GPU_Row_End)*A_Column)/32; i+=32){
+         std::cout << "aHost value is: " << aHostConcat[i] << std::endl;
+     }
      timer.stop("B");
      timer.print("B", 1);
     // // unsigned int* bHostConcat = new unsigned int[B_Row*(B_Column-B_CPU_Col_Start)];
@@ -136,7 +144,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
      int ib=16;
     high_resolution_clock::time_point t3 = high_resolution_clock::now();
 
-    unsigned int* cHostConcat = new unsigned int[(A_Row-A_CPU_Row_Start)*(B_Column-B_CPU_Col_Start)/32];
+    unsigned int* cHostConcat = new unsigned int[(A_Row-A_CPU_Row_Start)*128/32]; //(B_Column-B_CPU_Col_Start)/32];
 
     int dimen = A_CPU_Row_Start*B_CPU_Col_Start;
     std::thread first (matrixMulFunc, aHostConcat, bHostConcat, cHostConcat, A_CPU_Row_Start, dimen);
