@@ -139,11 +139,11 @@ class XnorGemm(cuda.GpuOp):
             C = outputs[0]
             # only allocate if there is no previous allocation of the right size.
             if C[0] is None or C[0].shape != output_shape:
-                C[0] = cuda.CudaNdarray.zeros(output_shape)           
-            
-            # Concatenating the rows of A  
+                C[0] = cuda.CudaNdarray.zeros(output_shape)
+
+            # Concatenating the rows of A
             Ac = drv.mem_alloc(m*n*4/32)
-            block_size = 64            
+            block_size = 64
             block = (block_size,1,1)
             grid = (m*n/(block_size*32)+1,1)
             concatenate_rows_kernel(A,Ac, np.intc(m*n/32), block= block, grid=grid)

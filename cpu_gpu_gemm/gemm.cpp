@@ -15,14 +15,30 @@
 #include <pybind11/stl.h>
 #include <cuda_runtime.h>
 
-void CPU_GPU_Gemm(int  A_ptr, int  B_ptr, int  C_ptr, int alpha,
+#include <iostream>
+#include <chrono>
+
+template<typename TimeT = std::chrono::milliseconds>
+struct measure
+{
+    template<typename F, typename ...Args>
+    static typename TimeT::rep execution(F&& func, Args&&... args)
+    {
+        auto start = std::chrono::steady_clock::now();
+        std::forward<decltype(func)>(func)(std::forward<Args>(args)...);
+        auto duration = std::chrono::duration_cast< TimeT> 
+                            (std::chrono::steady_clock::now() - start);
+        return duration.count();
+    }
+};
+
+void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
                   int A_Row, int A_Column,
                   int B_Row, int B_Column,
                   int C_Row, int C_Column,
                   int B_Host_ptr, int C_Host_ptr){
 
-    Timer        timer;
-    cudaError_t  cudaStatus;
+    // Timer        timer;
 
     float * A = (float*)A_ptr;
     float * B = (float*)B_ptr;
@@ -31,76 +47,64 @@ void CPU_GPU_Gemm(int  A_ptr, int  B_ptr, int  C_ptr, int alpha,
     float * C_Host = (float*)C_Host_ptr;
 
     // Allocate
-    timer.start("Allocation");
+    // timer.start("Allocation");
+    cudaStream_t kernel_stream;
+    cudaStream_t data_stream;
+    cudaStreamCreate(&kernel_stream);
+    cudaStreamCreate(&data_stream);
 
-    const int A_GPU_Row     = (int) A_Row * alpha;
+    const int A_GPU_Row     = (int)( A_Row * alpha);
     const int A_CPU_Row     = A_Row - A_GPU_Row;
 
-    timer.stop("Allocation");
-    timer.print("Allocation", 1);
-
-
-    timer.start("Initialization");
-
-    timer.stop("Initialization");
-    timer.print("Initialization", 1);
-
-    timer.start("Kernel Call");
-    //Changed the A_GPU_Row start with altered alpha value
-    call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
-                                 A_GPU_Row, C_Column, B, A, C);
-    printf("Made it after GPU kernel. Need sync\n");
     float* temp_A_Host;
-    if (alpha<1){
-        temp_A_Host = (float *)malloc(sizeof(float)*A_CPU_Row*A_Column);
+    int temp_A_Host_Size = sizeof(float)*A_CPU_Row*A_Column;
+    // temp_A_Host = (float *)malloc(temp_A_Host_Size);
+    cudaMallocHost(&temp_A_Host,temp_A_Host_Size);
 
-        cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
+    // timer.stop("Allocation");
+    // timer.print("Allocation", 1);
 
-        printf("Memcpy is no good.\n");
 
+    // timer.start("Kernel Call");
+    //Changed the A_GPU_Row start with altered alpha value
+    cudaMemcpyAsync(temp_A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
+    call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
+                                 A_GPU_Row, C_Column, B, A, C,At, kernel_stream);
+
+    if (alpha<1.0){
+
+
+        // NONE STREAM
+        // cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
+
+        // STREAM
+        cudaStreamSynchronize (data_stream);
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
                 A_CPU_Row, B_Column, A_Column, 1, temp_A_Host, A_Column, B_Host, B_Column, 0.0, C_Host, B_Column);
-
-        // serialMatrixMultiply(temp_A_Host, B_Host, C_Host, 
-                            // A_Row, A_Column,
-                            // B_Row, B_Column,
-                            // C_Row, C_Column,
-                            // A_GPU_Row, A_Row);
-        free(temp_A_Host);
-
+        cudaMemcpyAsync(&C[A_GPU_Row * C_Column], C_Host, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice, data_stream);
     }
-    
-
-    // Launch CPU threads
-    // std::thread main_thread(run_cpu_threads, h_in_out, h_in_out, h_flags, p.n, p.m, p.pad, p.n_threads, p.n_gpu_threads, n_tasks, p.alpha);
 
     cudaDeviceSynchronize();
-    cudaMemcpy(&C[A_GPU_Row * C_Column], C_Host, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice);
-    timer.stop("Kernel Call");
-    timer.print("Kernel Call", 1);
-    // main_thread.join();
+    // timer.stop("Kernel Call");
+    // timer.print("Kernel Call", 1);
 
-    // timer.print("Kernel", p.n_reps);
+    // timer.start("Deallocation");
 
-    // Free memory
-    timer.start("Deallocation");
-    // free(h_in_out);
-    // free(h_flags);
-    // cudaStatus = cudaFree(d_in_out);
-    // cudaStatus = cudaFree(d_flags);
-    timer.stop("Deallocation");
-    timer.print("Deallocation", 1);
+    // free(temp_A_Host);
+    cudaFreeHost(temp_A_Host);
+    cudaStreamDestroy(kernel_stream);
+    cudaStreamDestroy(data_stream);
+
+    // timer.stop("Deallocation");
+    // timer.print("Deallocation", 1);
+    // timer.stop("Allocation");
+    // timer.print("Allocation", 1);
 
     // Release timers
-    timer.release("Allocation");
-    timer.release("Initialization");
-    timer.release("Copy To Device");
-    timer.release("Kernel");
-    timer.release("Copy Back and Merge");
-    timer.release("Deallocation");
+    // timer.release("Allocation");
+    // timer.release("Kernel");
+    // timer.release("Deallocation");
 
-    printf("Test Passed\n");
-    // return 0;
 }
 
 void serialMatrixMultiply(float *A, float *B, float *C,
@@ -123,11 +127,17 @@ void serialMatrixMultiply(float *A, float *B, float *C,
 }
 
 // Main ------------------------------------------------------------------------------------------
-// int main(){
+int main(){
 
-//     float* A;
-//     float* B;
-//     float* C;
+    float* A;
+    float* At;
+    float* B;
+    float* C;
+
+    float* A_device;
+    float* At_device;
+    float* B_device;
+    float* C_device;
 
 //     float* A_device;
 //     float* B_device;
@@ -135,35 +145,71 @@ void serialMatrixMultiply(float *A, float *B, float *C,
 
 //     int A_Row, A_Column, B_Row, B_Column, C_Row, C_Column;
 
-//     A_Row = 10000;
-//     A_Column = 784;
-//     B_Column = 4096;
-//     B_Row = 784;
+    C_Row = A_Row;
+    C_Column = B_Column;
+// float alpha = 1.0;
+    float alpha = 0.8;
+    // float alpha = .0000;
+    // float alpha = 0.0001;
 
-//     C_Row = A_Row;
-//     C_Column = B_Column;
-//     float alpha = .001;
-//     // float alpha = .0000;
-//     // float alpha = 0.0001;
+    A = (float *)malloc(A_Row*A_Column*sizeof(float));
+    At = (float *)malloc(A_Row*A_Column*sizeof(float));
+    B = (float *)malloc(B_Row*B_Column*sizeof(float));
+    C = (float *)malloc(C_Row*C_Column*sizeof(float));
 
-//     A = (float *)malloc(A_Row*A_Column*sizeof(float));
-//     B = (float *)malloc(B_Row*B_Column*sizeof(float));
-//     C = (float *)malloc(C_Row*C_Column*sizeof(float));
+
+    cudaMalloc(&A_device, A_Row*A_Column*sizeof(float));
+    cudaMalloc(&At_device, A_Row*A_Column*sizeof(float));
+    cudaMalloc(&B_device, B_Row*B_Column*sizeof(float));
+    cudaMalloc(&C_device, C_Row*C_Column*sizeof(float));
 
 //     cudaMalloc(&A_device, A_Row*A_Column*sizeof(float));
 //     cudaMalloc(&B_device, B_Row*B_Column*sizeof(float));
 //     cudaMalloc(&C_device, C_Row*C_Column*sizeof(float));
 
-//     for (int i=0; i<A_Row*A_Column; i++)
-//         A[i] = 1.0;
-
-//     for (int i=0; i<B_Row*B_Column; i++)
-//         B[i] = 2.0;
-
+    for (int i=0; i<B_Row*B_Column; i++)
+        B[i] = 0.5;
 //     cudaMemcpy(A_device, A, sizeof(float)*A_Row*A_Column, cudaMemcpyHostToDevice);
 //     cudaMemcpy(B_device, B, sizeof(float)*B_Row*B_Column, cudaMemcpyHostToDevice);
 
 //     printf("After memcpy\n");
+    printf("After memcpy\n");
+    
+    // std::cout << measure<>::execution(CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,A_Row, A_Column, B_Row, B_Column, C_Row, C_Column, B,C )) << std::endl;
+    int timex [21];
+    int iteration = 1;
+    for(int j = 0; j<=20;  j += 1){
+        alpha = j * .05;
+        int timetemp = 0;
+        for(int i = 0; i<iteration; i++){
+            std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+            CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,
+                        A_Row, A_Column,
+                        B_Row, B_Column,
+                        C_Row, C_Column,
+                        B,C );
+            std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
+
+            timetemp += (int)std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+        }
+        timex[j] = timetemp/iteration;
+        std::cout << " time: " << timetemp/iteration << std::endl;
+        
+    }
+    // std::cout << " time: " << timetemp/iteration << std::endl;
+    for(auto const& value: timex)
+    {
+        std::cout << value << ",";
+    }
+
+
+    // CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,
+    //               A_Row, A_Column,
+    //               B_Row, B_Column,
+    //               C_Row, C_Column,
+    //               B,C );
+>>>>>>> unified-memory:cpu_gpu_gemm/main.cpp
 
 //     CPU_GPU_Gemm(A_device, B_device, C_device, alpha,
 //                   A_Row, A_Column,
@@ -173,34 +219,18 @@ void serialMatrixMultiply(float *A, float *B, float *C,
 
 //     cudaMemcpy(C, C_device, sizeof(float)*C_Column*C_Row, cudaMemcpyDeviceToHost);
 
-//     cudaFree(A_device);
-//     cudaFree(B_device);
-//     cudaFree(C_device);
-
-//    for (int i=0; i<C_Column*10000; i++){
-//        if( C[i] != 784*2){
-//         if( i % C_Column == 0){
-//             std::cout << "WRONG: "<< "x: " <<i%4096 << " y: " << i/4096<< "  " << C[i] << std::endl;
-//         }
-
-//        }
-//    }
-//     std::cout << "ALL GOOD" << std::endl;
+    // for (int i=0; i<C_Column*10000; i++){
+    //   if( C[i] != 784*.5){
+//        std::cout << "WRONG: "<< "x: " <<i%4096 << " y: " << i/4096<< "  " << C[i] << std::endl;
+    //    }
+    // }
+    std::cout << "ALL GOOD" << std::endl;
     
 //     free(A);
 //     free(B);
 //     free(C);
     
-	
-// // for (int i=0; i<C_Row; i++){
-//     //     for (int j=0; j<C_Column; j++){
-//     //         printf("%f ", C[i*C_Column+j]);
-//     //     }
-//     //     printf("\n");
-//     // }
-// }
-
-// namespace py = pybind11;
+}
 
 PYBIND11_PLUGIN(gemm)
 {
@@ -208,6 +238,7 @@ PYBIND11_PLUGIN(gemm)
   m.def("CPU_GPU_Gemm", CPU_GPU_Gemm);
   
 }
+
 
 
 

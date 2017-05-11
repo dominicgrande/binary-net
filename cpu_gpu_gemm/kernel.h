@@ -12,7 +12,7 @@
 //     );
 
 void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRows,
-                        int numCRows, int numCColumns, float *weights, float *x, float* output);
+                        int numCRows, int numCColumns, float *weights, float *x, float* output,float* xt, cudaStream_t stream);
 
 void serialMatrixMultiply(float *A, float *B, float *C,
                                      int numARows, int numAColumns,

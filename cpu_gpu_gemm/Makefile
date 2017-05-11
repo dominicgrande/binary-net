@@ -1,4 +1,4 @@
-CXX=nvcc -ccbin g++-4.9 
+CXX=nvcc -ccbin g++-4.9 -use_fast_math -O3 -Xptxas --verbose
 CXX_FLAGS=-std=c++11 -shared --compiler-options -fPIC 
 
 
