@@ -91,9 +91,9 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // unsigned int *Ac;
     // unsigned int *Bc;
 
-    // int m = A_Row;
-    // int n = A_Column;
-    // int k = B_Column;
+    int m = A_Row;
+    int n = A_Column;
+    int k = B_Column;
 
     // cudaMalloc(&A_device, m*n*sizeof(float));
     // cudaMalloc(&B_device, n*k*sizeof(float));
@@ -248,11 +248,11 @@ int main(){
         int timetemp = 0;
         for(int i = 0; i<iteration; i++){
             std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    CPU_GPU_Xor(A, B, C, 0.8, 0.8, 0.8,
+    CPU_GPU_Xor(A, B, C, alpha, alpha, alpha,
                             A_Row, A_Column,
                             B_Row, B_Column,
                             C_Row, C_Column,
-                            A_Device, B_device,
+                            A_device, B_device,
                             C_Device, Ac,
                             Bc, aHostConcat,
                             bHostConcat);
