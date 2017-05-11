@@ -223,6 +223,12 @@ __global__ void deconcatenate_rows_kernel(unsigned int *a, float *b, int size)
     }
 }
 
+__global__ void double_Matrix(float* A, int length){
+
+    if(threadIdx.x + blockIdx.x * blockDim.x < length){
+        A[threadIdx.x + blockIdx.x * blockDim.x] = A[threadIdx.x + blockIdx.x * blockDim.x ] * 2+2;
+    }
+}
 // A is shape (m,n), B is shape (n,k) and C is shape (m,k)
 __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int n, int k) {
     
@@ -285,6 +291,12 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 }
 
 
+void call_gpu_function(float* A_gpu, int length){
+
+        dim3 dimGrid(ceil(length/(float)128.0), 1, 1);
+        dim3 dimBlock(128,1,1);
+        double_Matrix<<<dimGrid, dimBlock>>>(A_gpu ,length);
+}
 
 void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRows,
     int numCRows, int numCColumns, float *weights, float *x, float* output,

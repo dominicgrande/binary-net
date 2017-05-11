@@ -20,4 +20,7 @@ void serialMatrixMultiply(float *A, float *B, float *C,
                                      int numCRows, int numCColumns,
                                      int numAStart, int numAStop);
 
+__global__ void double_Matrix(float* A, int length);
+
+void call_gpu_function(float* A_gpu, int length);
 #endif 
