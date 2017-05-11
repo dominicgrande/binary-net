@@ -12,6 +12,7 @@ import pycuda.driver as drv
 import theano.sandbox.cuda as cuda
 from theano.sandbox.cuda.basic_ops import host_from_gpu
 
+import gemm as gemm_lib
 import lasagne
 globalCounter = 0
 
@@ -56,7 +57,6 @@ class Gemm(cuda.GpuOp):
             # inputs
             A = inputs[0][0]
             B = inputs[1][0]
-	    print type(A[0][0])            
             # dimensions
             m = A.shape[0]
             n = A.shape[1]
@@ -75,8 +75,21 @@ class Gemm(cuda.GpuOp):
             block_size = 16
             block = (block_size,block_size,1)
             grid = (k / block_size+1, m / block_size+1) # better too many blocks than too little
-            gemm_kernel(A,B,C[0], np.intc(m), np.intc(n), np.intc(k), block= block, grid=grid)
+
+            # gemm_kernel(A,B,C[0], np.intc(m), np.intc(n), np.intc(k), block= block, grid=grid)
+            A_gpu_pointer = A.gpudata
+            B_gpu_pointer = B.gpudata
+            C_gpu_pointer = C[0].gpudata
+
+            gemm_lib.CPU_GPU_Gemm(  A_gpu_pointer, B_gpu_pointer, C_gpu_pointer, np.float32(.8),
+                                    np.int32(10000), np.int32(784), 
+                                    np.int32(784), np.int32(4096), 
+                                    np.int32(10000), np.int32(4096) );
             
+    # void CPU_GPU_Gemm(unsigned long A_ptr, unsigned long At_ptr, unsigned long B_ptr, unsigned long C_ptr, float alpha,
+    #                 int A_Row, int A_Column,
+    #                 int B_Row, int B_Column,
+    #                 int C_Row, int C_Column){
         thunk.inputs = inputs
         thunk.outputs = outputs
         thunk.lazy = False
@@ -205,19 +218,24 @@ class DenseLayer(lasagne.layers.DenseLayer):
 # Test suite
 if __name__ == "__main__":   
     # N = 8192
-    N = 4096
-    m = N
-    n = N
-    k = N
+    # N = 4096
+    m = 10000
+    n = 784
+    k = 4096
     # m = 784
     # n = 512 
     # k = 10
-    
+
+    x = np.ones(784*4096).astype(np.float32)
+    gemm_lib.Load_Weights(x)
+    gemm_lib.initMemory(np.float(.8),np.int32(0), np.int32(10000), np.int32(784), np.int32(784), np.int32(4096), np.int32(10000), np.int32(4096) );
+    # exit()
+
     A = T.fmatrix()
     B = T.fmatrix()
-    dot1 = theano.function([A,B], T.dot(A, B))
+    # dot1 = theano.function([A,B], T.dot(A, B))
     dot2 = theano.function([A,B], host_from_gpu(gemm(A, B)))
-    dot3 = theano.function([A,B], host_from_gpu(xnor_gemm(A,B)))
+    # dot3 = theano.function([A,B], host_from_gpu(xnor_gemm(A,B)))
     
     # Generating random BINARY matrices
     a = SignNumpy(np.random.randn(m, n))
@@ -230,12 +248,12 @@ if __name__ == "__main__":
     #dot1_duration = time.time() - start_time
     # print c1[0][0]
     #print("Theano time = "+str(dot1_duration)+"s")
-    start_time = time.time()
-    c3 = dot3(a,b)
-    dot3_duration = time.time() - start_time
-    # print c3[0][0]
-    print("XNOR kernel time = "+str(dot3_duration)+"s")
-    print ("The global counter is: ") + str(globalCounter)
+    # start_time = time.time()
+    # c3 = dot3(a,b)
+    # dot3_duration = time.time() - start_time
+    # # print c3[0][0]
+    # print("XNOR kernel time = "+str(dot3_duration)+"s")
+    # print ("The global counter is: ") + str(globalCounter)
 
     start_time = time.time()
     c2 = dot2(a,b)
@@ -243,10 +261,10 @@ if __name__ == "__main__":
     # print c2[0][0]
     print("Baseline kernel time = "+str(dot2_duration)+"s")
     
-    # Asserting the kernels are giving the same output
-    print "np.mean(np.absolute(c1-c3)) = " + str(np.mean(np.absolute(c1-c3)))
-    print "np.mean(np.absolute(c2-c3)) = " + str(np.mean(np.absolute(c2-c3)))
-    print "np.allclose(c1, c3) = " + str(np.allclose(c1, c3))
-    print "np.allclose(c2, c3) = " + str(np.allclose(c2, c3))
+    # # Asserting the kernels are giving the same output
+    # print "np.mean(np.absolute(c1-c3)) = " + str(np.mean(np.absolute(c1-c3)))
+    # print "np.mean(np.absolute(c2-c3)) = " + str(np.mean(np.absolute(c2-c3)))
+    # print "np.allclose(c1, c3) = " + str(np.allclose(c1, c3))
+    # print "np.allclose(c2, c3) = " + str(np.allclose(c2, c3))
 
     

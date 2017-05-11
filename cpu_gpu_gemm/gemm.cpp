@@ -33,80 +33,152 @@ struct measure
     }
 };
 
-// void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
-//                   int A_Row, int A_Column,
-//                   int B_Row, int B_Column,
-//                   int C_Row, int C_Column,
-//                   int B_Host_ptr, int C_Host_ptr){
+static float* B_Host;
 
-//     // Timer        timer;
+static float* A_Host;
+static float* At;
+static float* C_Host;
+static int pinned_memory;
 
-//     // float * A = (float*)A_ptr;
-//     // float * B = (float*)B_ptr;
-//     // float * C = (float*)C_ptr;
-//     // float * B_Host = (float*)B_Host_ptr;
-//     // float * C_Host = (float*)C_Host_ptr;
+void CPU_GPU_Gemm(unsigned long A_ptr, unsigned long B_ptr, unsigned long C_ptr, float alpha,
+                  int A_Row, int A_Column,
+                  int B_Row, int B_Column,
+                  int C_Row, int C_Column){
 
-//     // Allocate
-//     // timer.start("Allocation");
-//     cudaStream_t kernel_stream;
-//     cudaStream_t data_stream;
-//     cudaStreamCreate(&kernel_stream);
-//     cudaStreamCreate(&data_stream);
+    // Timer        timer;
 
-//     const int A_GPU_Row     = (int)( A_Row * alpha);
-//     const int A_CPU_Row     = A_Row - A_GPU_Row;
+    float * A =  (float*)A_ptr;
+    float * B =  (float*)B_ptr;
+    float * C =  (float*)C_ptr;
 
-//     float* temp_A_Host;
-//     int temp_A_Host_Size = sizeof(float)*A_CPU_Row*A_Column;
-//     // temp_A_Host = (float *)malloc(temp_A_Host_Size);
-//     cudaMallocHost(&temp_A_Host,temp_A_Host_Size);
+    cudaStream_t kernel_stream;
+    cudaStream_t data_stream;
+    cudaStreamCreate(&kernel_stream);
+    cudaStreamCreate(&data_stream);
 
-//     // timer.stop("Allocation");
-//     // timer.print("Allocation", 1);
+    const int A_GPU_Row     = (int)( A_Row * alpha);
+    const int A_CPU_Row     = A_Row - A_GPU_Row;
+
+    float* temp_A_Host;
+    int temp_A_Host_Size = sizeof(float)*A_CPU_Row*A_Column;
 
 
-//     // timer.start("Kernel Call");
-//     //Changed the A_GPU_Row start with altered alpha value
-//     cudaMemcpyAsync(temp_A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
-//     call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
-//                                  A_GPU_Row, C_Column, B, A, C,At, kernel_stream);
+    // timer.start("Kernel Call");
+    //Changed the A_GPU_Row start with altered alpha value
+    cudaMemcpyAsync(temp_A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
+    call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
+                                 A_GPU_Row, C_Column, B, A, C,At, kernel_stream);
 
-//     if (alpha<1.0){
+    if (alpha<1.0){
 
 
-//         // NONE STREAM
-//         // cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
+        // NONE STREAM
+        // cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
 
-//         // STREAM
-//         cudaStreamSynchronize (data_stream);
-//         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
-//                 A_CPU_Row, B_Column, A_Column, 1, temp_A_Host, A_Column, B_Host, B_Column, 0.0, C_Host, B_Column);
-//         cudaMemcpyAsync(&C[A_GPU_Row * C_Column], C_Host, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice, data_stream);
-//     }
+        // STREAM
+        cudaStreamSynchronize (data_stream);
+        cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
+                A_CPU_Row, B_Column, A_Column, 1, A_Host, A_Column, B_Host, B_Column, 0.0, C_Host, B_Column);
+        cudaMemcpyAsync(&C[A_GPU_Row * C_Column], C_Host, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice, data_stream);
+    }
 
-//     cudaDeviceSynchronize();
-//     // timer.stop("Kernel Call");
-//     // timer.print("Kernel Call", 1);
+    cudaDeviceSynchronize();
+    // timer.stop("Kernel Call");
+    // timer.print("Kernel Call", 1);
 
-//     // timer.start("Deallocation");
+    // timer.start("Deallocation");
 
-//     // free(temp_A_Host);
-//     cudaFreeHost(temp_A_Host);
-//     cudaStreamDestroy(kernel_stream);
-//     cudaStreamDestroy(data_stream);
+    cudaStreamDestroy(kernel_stream);
+    cudaStreamDestroy(data_stream);
 
-//     // timer.stop("Deallocation");
-//     // timer.print("Deallocation", 1);
-//     // timer.stop("Allocation");
-//     // timer.print("Allocation", 1);
+    // timer.stop("Deallocation");
+    // timer.print("Deallocation", 1);
 
-//     // Release timers
-//     // timer.release("Allocation");
-//     // timer.release("Kernel");
-//     // timer.release("Deallocation");
+    // Release timers
+    // timer.release("Kernel");
+    // timer.release("Deallocation");
 
-// }
+}
+static int test_global = 0;
+
+
+void Load_Weights(pybind11::array_t<float> vec)
+{
+    // py::buffer_info info_i = i.request();
+    auto info_i = vec.request();
+
+    // cudaError_t error = cudaMalloc(&w, info_i.size * sizeof(float));
+//   cudaError_t error = cudaMalloc(&gpu_ptr, size * sizeof(double));
+
+    B_Host = (float*)info_i.ptr;
+}
+void initMemory(float alpha, int pinned_memory_input,
+                int A_Row, int A_Column,
+                int B_Row, int B_Column,
+                int C_Row, int C_Column)
+{
+    // A_host = (float *)malloc(A_Row*A_Column*sizeof(float));
+    // C_host = (float *)malloc(C_Row*C_Column*sizeof(float));
+    pinned_memory = pinned_memory_input;
+    int height = A_Row -  (int)( A_Row * alpha);
+
+    if(pinned_memory == 1){
+        cudaMallocHost(&A_Host,height * A_Column);
+        cudaMallocHost(&C_Host,height * C_Column);
+    }
+    else{
+        A_Host = new float [height*A_Column];
+        C_Host = new float [height*C_Column];
+    }
+    cudaMalloc(&At, A_Row*A_Column*sizeof(float));
+
+
+}
+
+void deallocateMemory(int alpha,
+                int A_Row, int A_Column,
+                int B_Row, int B_Column,
+                int C_Row, int C_Column)
+{
+    // A_host = (float *)malloc(A_Row*A_Column*sizeof(float));
+    // C_host = (float *)malloc(C_Row*C_Column*sizeof(float));
+
+    if(pinned_memory == 1){
+        cudaFreeHost(A_Host);
+        cudaFreeHost(C_Host);
+    }
+    else{
+        delete [] A_Host;
+        delete [] C_Host;
+    }
+    cudaFree(At);
+  
+}
+void CPU_GPU_Gemm_test(unsigned long A, int length){
+
+        // printf("test global %d\n", test_global++);
+        // printf("w value: %f", W_host[1]);
+        float* A_gpu = (float *) A;
+
+        call_gpu_function(A_gpu, length);
+
+
+}
+
+PYBIND11_PLUGIN(gemm)
+{
+  pybind11::module m("gemm", "GPU Library");
+  m.def("CPU_GPU_Gemm", CPU_GPU_Gemm);
+  m.def("Load_Weights", Load_Weights);
+  m.def("initMemory", initMemory);
+  m.def("deallocateMemory", deallocateMemory);
+  
+}
+
+
+
+
+
 
 // void serialMatrixMultiply(float *A, float *B, float *C,
 //                                      int numARows, int numAColumns,
@@ -219,31 +291,3 @@ struct measure
 // //     free(C);
     
 // }
-static int test_global = 0;
-
-void CPU_GPU_Gemm_test(unsigned long A, int length){
-                //, float* At, float * B, float * C, float alpha,
-                //   int A_Row, int A_Column,
-                //   int B_Row, int B_Column,
-                //   int C_Row, int C_Column,
-                //   int B_Host_ptr, int C_Host_ptr){
-
-        printf("test global %d\n", test_global++);
-        float* A_gpu = (float *) A;
-
-        call_gpu_function(A_gpu, length);
-
-
-}
-
-PYBIND11_PLUGIN(gemm)
-{
-  pybind11::module m("gemm", "GPU Library");
-//   m.def("CPU_GPU_Gemm", CPU_GPU_Gemm);
-  m.def("CPU_GPU_Gemm_test", CPU_GPU_Gemm_test);
-  
-}
-
-
-
-
