@@ -265,7 +265,7 @@ int main(){
 
         }
         timex[j] = timetemp/iteration;
-        std::cout << " time: " << timetemp/iteration << std::endl;
+        std::cout << "Alpha value " << alpha <<" time: " << timetemp/iteration << std::endl;
         
     }
     // std::cout << " time: " << timetemp/iteration << std::endl;
