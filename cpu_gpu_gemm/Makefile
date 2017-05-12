@@ -1,5 +1,5 @@
 CXX=nvcc
-CXX_FLAGS=-std=c++11 -O3 -use_fast_math -Xptxas --verbose
+CXX_FLAGS=-std=c++11 -O3 -use_fast_math -Xptxas --verbose 
 
 ifndef CHAI_CUDA_LIB
     $(error CHAI_CUDA_LIB not defined. This environment variable must be defined to point to the location of the CUDA library)

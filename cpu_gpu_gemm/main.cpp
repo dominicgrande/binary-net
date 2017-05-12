@@ -167,30 +167,31 @@ int main(){
     // std::cout << measure<>::execution(CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,A_Row, A_Column, B_Row, B_Column, C_Row, C_Column, B,C )) << std::endl;
     int timex [21];
     int iteration = 1;
-    for(int j = 0; j<=20;  j += 1){
-        alpha = j * .05;
-        int timetemp = 0;
-        for(int i = 0; i<iteration; i++){
-            std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    alpha = 0.8;
+    // for(int j = 0; j<=20;  j += 1){
+    //    alpha = j * .05;
+    //    int timetemp = 0;
+     //   for(int i = 0; i<iteration; i++){
+         //   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
             CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,
                         A_Row, A_Column,
                         B_Row, B_Column,
                         C_Row, C_Column,
                         B,C );
-            std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
+       //     std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
 
-            timetemp += (int)std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+          //  timetemp += (int)std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
-        }
-        timex[j] = timetemp/iteration;
-        std::cout << " time: " << timetemp/iteration << std::endl;
+       // }
+        //timex[j] = timetemp/iteration;
+        //std::cout << " time: " << timetemp/iteration << std::endl;
         
-    }
+   // }
     // std::cout << " time: " << timetemp/iteration << std::endl;
-    for(auto const& value: timex)
-    {
-        std::cout << value << ",";
-    }
+   // for(auto const& value: timex)
+    //{
+     //   std::cout << value << ",";
+   // }
 
 
     // CPU_GPU_Gemm(A_device,At_device, B_device, C_device, alpha,
