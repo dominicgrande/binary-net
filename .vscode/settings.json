@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.common": "makefile",
+        "*.cu": "cpp",
+        "chrono": "cpp"
+    }
+}
