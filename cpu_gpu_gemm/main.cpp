@@ -177,7 +177,7 @@ int main(){
                         A_Row, A_Column,
                         B_Row, B_Column,
                         C_Row, C_Column,
-                        B,C );
+                        B, C);
        //     std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
 
           //  timetemp += (int)std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();

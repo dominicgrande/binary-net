@@ -288,10 +288,7 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 void call_GPU_Kernel(int n_tasks, float alpha, int numAColumns, 
     int numARows, int numBColumns, int numBRows,
     int numCRows, int numCColumns, float *weights, float *x, float* output,
-    float* xt,cudaStream_t stream
-     #ifdef CUDA_8_0
-        , worklist
-    #endif)
+    float* xt,cudaStream_t stream)
 {
     dim3 dimGrid0(ceil(numAColumns/(float)BLOCK_SIZE),
         ceil(numARows/(float)BLOCK_SIZE),1);
@@ -311,21 +308,21 @@ void call_GPU_Kernel(int n_tasks, float alpha, int numAColumns,
 }
 
 
-cudaError_t call_gemm_code(int blocks, int threads, int n_tasks, float alpha,
-    int in_size_i, int in_size_j, int out_size_i, int out_size_j,
-    int l_mem_size, XYZ* d_in, XYZ* d_out
-#ifdef CUDA_8_0
-    , int* worklist
-#endif
-    ){
-    dim3 dimGrid(blocks, 1);
-    dim3 dimBlock(threads, threads);
-    Bezier_surface<<<dimGrid, dimBlock, l_mem_size>>>(n_tasks, alpha, in_size_i, in_size_j, out_size_i, out_size_j,
-        d_in, d_out
-#ifdef CUDA_8_0
-        , worklist
-#endif
-        );
-    cudaError_t err = cudaGetLastError();
-    return err;
-}
+// cudaError_t call_gemm_code(int blocks, int threads, int n_tasks, float alpha,
+//     int in_size_i, int in_size_j, int out_size_i, int out_size_j,
+//     int l_mem_size, XYZ* d_in, XYZ* d_out
+// #ifdef CUDA_8_0
+//     , int* worklist
+// #endif
+//     ){
+//     dim3 dimGrid(blocks, 1);
+//     dim3 dimBlock(threads, threads);
+//     Bezier_surface<<<dimGrid, dimBlock, l_mem_size>>>(n_tasks, alpha, in_size_i, in_size_j, out_size_i, out_size_j,
+//         d_in, d_out
+// #ifdef CUDA_8_0
+//         , worklist
+// #endif
+//         );
+//     cudaError_t err = cudaGetLastError();
+//     return err;
+// }
