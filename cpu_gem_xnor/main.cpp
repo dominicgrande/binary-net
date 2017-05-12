@@ -32,7 +32,7 @@ void matrixMulFunc(unsigned int *A, unsigned int *B, unsigned int *C, int numRow
     int kb=16;
     int k=0;
     for (int ii = 0; ii <10000-numRowsStart; ii += 4*ib){ 
-    for (int kk = 0; kk < 128-numColsStart; kk += kb){
+    for (int kk = 0; kk < 4096-numColsStart; kk += kb){
         for (int j=0; j < 128-numColsStart; j += 2){
             for(int i = ii; i < ii + ib; i += 2 ){
                 if (i < dimensions-1 && j < dimensions-1 && k < dimensions-1){
