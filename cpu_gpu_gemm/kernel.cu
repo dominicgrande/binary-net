@@ -17,10 +17,7 @@
 #define TY 0
 #define TZ 0
 
-// CUDA tutorial: http://www.nvidia.com/docs/IO/116711/sc11-cuda-c-basics.pdf
-// http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#shared-memory
-// A is shape (m,n), B is shape (n,k) and C is shape (m,k)
-/*
+//Original trash code
 __global__ void gemm(float* A, float* B, float* C, int m, int n, int k) {
 
     // Block row and column
@@ -65,75 +62,77 @@ __global__ void gemm(float* A, float* B, float* C, int m, int n, int k) {
         __syncthreads();
         
         // Multiply Asub and Bsub together
-        for (int j = 0; j < BLOCK_SIZE; ++j)
-		 Cvalue += As[row][j] * Bs[j][col]; 
+        for (int j = 0; j < BLOCK_SIZE; ++j) Cvalue += As[row][j] * Bs[j][col]; 
         
         // Synchronize to make sure that the preceding
         // computation is done before loading two new
         // sub-matrices of A and B in the next iteration
-      __syncthreads();
+        __syncthreads();
     }
-      if(col+blockCol*BLOCK_SIZE<k && row+blockRow*BLOCK_SIZE<m)
-        Csub[row*k+col] = Cvalue;
-
-
-
-}
-*/
-__global__ void gemm(float* A, float* B, float* C, int m, int n, int k){
-
-	int numARows = n;
-	int numAColumns = m;
-	int numBRows = n;
-	int numBColumns = k;
-	int numCRows = m;
-	int numCColumns = k;
-
-
-  __shared__ float sm[K][TILE_WIDTH_N];
-
-  
-  int tx = (threadIdx.x%TILE_WIDTH_N); 
-  int ty = (threadIdx.x/TILE_WIDTH_N);
-  int bx = blockIdx.x;  int by = blockIdx.y;
-  int Col = bx * TILE_WIDTH_M; 
-  int Row = by * TILE_WIDTH_N; 
-  
-  float reg[K] = {0.0};
-  float temp[TILE_WIDTH_N] = {0.0};
-  
-
-  for(int i=0; i<ceil(numBRows/(float)K); ++i)
-  {
-
-     for(int arridx = 0; arridx<K; ++arridx)
-     {
-        if(Col+threadIdx.x<numAColumns && (i*K+arridx) < numARows)
-          reg[arridx] = A[(i*K*numAColumns)+(numAColumns*arridx)+Col+threadIdx.x];
-        else
-          reg[arridx] = 0.0;
-     }
     
-     if(Row+tx<numBColumns && (i*K+ty) < numBRows  )
-        sm[ty][tx] = B[(i*K+ty)*numBColumns+ Row+tx];
-     else
-        sm[ty][tx] = 0.0;
-    __syncthreads();
-
-    for(int r1=0; r1 < K; ++r1)
-    {
-      for(int c1=0; c1<TILE_WIDTH_N; ++c1)
-        temp[c1] += reg[r1] * sm[r1][c1];
-    }
-      __syncthreads();
-  }
-            
-  for(int c1=0; c1<TILE_WIDTH_N; ++c1)
-  {
-      if(Row+c1 < numCColumns&&Col+threadIdx.x <numCRows )
-        C[(Col+threadIdx.x)*numCColumns+Row+c1] = temp[c1];
-  }
+    // Write Csub to device memory
+    // Each thread writes one element
+    if(col + blockCol* BLOCK_SIZE< k && row + blockRow* BLOCK_SIZE< m) Csub[row*k+col] = Cvalue;
 }
+
+// __global__ void gemm(int n_tasks, float alpha, float* A, float* B, float* C, int m, int n, int k
+//     #ifdef CUDA_8_0
+//         , worklist
+//     #endif
+// ){
+
+// 	int numARows = n;
+// 	int numAColumns = m;
+// 	int numBRows = n;
+// 	int numBColumns = k;
+// 	int numCRows = m;
+// 	int numCColumns = k;
+
+
+//   __shared__ float sm[K][TILE_WIDTH_N];
+
+  
+//   int tx = (threadIdx.x%TILE_WIDTH_N); 
+//   int ty = (threadIdx.x/TILE_WIDTH_N);
+//   int bx = blockIdx.x;  int by = blockIdx.y;
+//   int Col = bx * TILE_WIDTH_M; 
+//   int Row = by * TILE_WIDTH_N; 
+  
+//   float reg[K] = {0.0};
+//   float temp[TILE_WIDTH_N] = {0.0};
+  
+
+//   for(int i=0; i<ceil(numBRows/(float)K); ++i)
+//   {
+
+//      for(int arridx = 0; arridx<K; ++arridx)
+//      {
+//         if(Col+threadIdx.x<numAColumns && (i*K+arridx) < numARows)
+//           reg[arridx] = A[(i*K*numAColumns)+(numAColumns*arridx)+Col+threadIdx.x];
+//         else
+//           reg[arridx] = 0.0;
+//      }
+    
+//      if(Row+tx<numBColumns && (i*K+ty) < numBRows  )
+//         sm[ty][tx] = B[(i*K+ty)*numBColumns+ Row+tx];
+//      else
+//         sm[ty][tx] = 0.0;
+//     __syncthreads();
+
+//     for(int r1=0; r1 < K; ++r1)
+//     {
+//       for(int c1=0; c1<TILE_WIDTH_N; ++c1)
+//         temp[c1] += reg[r1] * sm[r1][c1];
+//     }
+//       __syncthreads();
+//   }
+            
+//   for(int c1=0; c1<TILE_WIDTH_N; ++c1)
+//   {
+//       if(Row+c1 < numCColumns&&Col+threadIdx.x <numCRows )
+//         C[(Col+threadIdx.x)*numCColumns+Row+c1] = temp[c1];
+//   }
+// }
 
 __global__ void transpose(float* A, float* B, int m, int n)
 {
@@ -286,9 +285,13 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 
 
 
-void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRows,
+void call_GPU_Kernel(int n_tasks, float alpha, int numAColumns, 
+    int numARows, int numBColumns, int numBRows,
     int numCRows, int numCColumns, float *weights, float *x, float* output,
-    float* xt,cudaStream_t stream)
+    float* xt,cudaStream_t stream
+     #ifdef CUDA_8_0
+        , worklist
+    #endif)
 {
     dim3 dimGrid0(ceil(numAColumns/(float)BLOCK_SIZE),
         ceil(numARows/(float)BLOCK_SIZE),1);
@@ -297,7 +300,7 @@ void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRow
 
     dim3 dimGrid(ceil(numARows/(float)TILE_WIDTH_M), ceil(numBColumns/(float)TILE_WIDTH_N), 1);
     dim3 dimBlock(TILE_WIDTH_M,1,1);
-    gemm<<<dimGrid, dimBlock>>>(xt, weights, output, numARows, numAColumns, numBColumns);
+    gemm<<<dimGrid, dimBlock>>>(weights, output, numARows, numAColumns, numBColumns);
 
 /*
     dim3 dimGrid(numBColumns/(float)BLOCK_SIZE, numARows/(float)BLOCK_SIZE,1);
@@ -308,9 +311,21 @@ void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRow
 }
 
 
-
-
-
-
-
-
+cudaError_t call_gemm_code(int blocks, int threads, int n_tasks, float alpha,
+    int in_size_i, int in_size_j, int out_size_i, int out_size_j,
+    int l_mem_size, XYZ* d_in, XYZ* d_out
+#ifdef CUDA_8_0
+    , int* worklist
+#endif
+    ){
+    dim3 dimGrid(blocks, 1);
+    dim3 dimBlock(threads, threads);
+    Bezier_surface<<<dimGrid, dimBlock, l_mem_size>>>(n_tasks, alpha, in_size_i, in_size_j, out_size_i, out_size_j,
+        d_in, d_out
+#ifdef CUDA_8_0
+        , worklist
+#endif
+        );
+    cudaError_t err = cudaGetLastError();
+    return err;
+}
