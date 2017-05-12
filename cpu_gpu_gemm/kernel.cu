@@ -293,7 +293,7 @@ void call_GPU_Kernel(int numAColumns,
     dim3 dimGrid0(ceil(numAColumns/(float)BLOCK_SIZE),
         ceil(numARows/(float)BLOCK_SIZE),1);
     dim3 dimBlock0(BLOCK_SIZE, BLOCK_SIZE, 1);
-    transpose<<<dimGrid0, dimBlock0, 0, stream>>>(x,xt, numARows, numAColumns); 
+    //transpose<<<dimGrid0, dimBlock0, 0, stream>>>(x,xt, numARows, numAColumns); 
 
     dim3 dimGrid(ceil(numARows/(float)TILE_WIDTH_M), ceil(numBColumns/(float)TILE_WIDTH_N), 1);
     dim3 dimBlock(TILE_WIDTH_M,1,1);
