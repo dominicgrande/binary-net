@@ -23,29 +23,5 @@ void CPU_GEMM(){
 }
 
 
-// void serialMatrixMultiply(float *A, float *B, float *C,
-//                                      int numARows, int numAColumns,
-//                                      int numBRows, int numBColumns,
-//                                      int numCRows, int numCColumns,
-//                                      int numAStart, int numAStop){
-
-//     printf("numAStart: %d - numAStop: %d\n", numAStart, numAStop);
-    
-//     for(int i=numAStart; i<numAStop; ++i){
-//         for(int j=0; j<numBColumns; ++j){
-//             C[i*numBColumns+j]=0;
-
-
-//             for(int k=0; k<numAColumns; ++k)
-//                 C[i*numBColumns+j]=C[i*numBColumns+j]+(A[(i-numAStart)*numAColumns+k]*B[k*numBColumns+j]);
-//         }
-//     }
-// }
-// int main(){
-//     std::thread main_thread(CPU_GEMM);
-//     std::cout << "threadnum: " << main_thread.get_id() << std::endl;
-
-//     main_thread.join();
-// }
 
 

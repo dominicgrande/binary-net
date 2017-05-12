@@ -20,22 +20,28 @@ inline unsigned int multiply_and_pop(unsigned int A, unsigned int B){
 void multiplyMatrices(unsigned int* A, unsigned int* B, float* C,int thread, 
 int rowFirst, int columnFirst, int rowSecond, int columnSecond)
 {
-	int i, j, k, temp, q,p;
+	int i, j, k, temp, q,p, m, n;
     int value = columnFirst * 32;
 	// Multiplying matrix firstMatrix and secondMatrix and storing in array mult.
-    int end = (thread+1)*rowFirst;
-	for(i =thread*rowFirst ; i < end; ++i)
+    // int end = (thread+1)*rowFirst;
+	for(i = 0; i < rowFirst; i= i + 16)
 	{
         q = i * columnFirst;
-		for(j = 0; j < columnSecond; j += 1)
+		for(j = 0; j < columnSecond; j = j + 16)
 		{
-            p = j * columnFirst;
-                for(k=0; k<columnFirst; ++k)
-                {
-                    // temp += multiply_and_pop(A[i*columnFirst+k], B[k*columnSecond+j]);
-                    temp += __builtin_popcount(A[q+k]^ B[p+k]);
+            for(m = 0; m < 16; m++){
+                for(n = 0; n < 16; n++){
+
+
+                p = j * columnFirst;
+                    for(k=0; k<columnFirst; ++k)
+                    {
+                        // temp += multiply_and_pop(A[i*columnFirst+k], B[k*columnSecond+j]);
+                        temp += __builtin_popcount(A[q+k]^ B[p+k]);
+                    }
+                    C[i*columnSecond+p] = -(2*(float)temp-value);
                 }
-                C[i*columnSecond+p] = -(2*(float)temp-value);
+            }
 		}
 	}
 }
@@ -123,11 +129,11 @@ int main(){
 
     std::chrono::steady_clock::time_point begin2 = std::chrono::steady_clock::now();
 
-    int n_threads = 4;
+    int n_threads = 1;
     std::vector<std::thread> cpu_threads;
 
     for(int i = 0; i < n_threads; i++) {
-        cpu_threads.push_back(std::thread(multiplyMatrices,B_Shrunk, A_Shrunk, C_Shrunk,i, 400/4, 128, 128, 4096));
+        cpu_threads.push_back(std::thread(multiplyMatrices,B_Shrunk, A_Shrunk, C_Shrunk,i, 1000, 128, 128, 4096));
     }
     std::for_each(cpu_threads.begin(), cpu_threads.end(), [](std::thread &t) { t.join(); });
     std::chrono::steady_clock::time_point end2= std::chrono::steady_clock::now();

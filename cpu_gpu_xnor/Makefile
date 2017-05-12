@@ -13,8 +13,8 @@ endif
 INC=-I$(CHAI_CUDA_INC) -I./include -I/usr/include/python2.7 -I/usr/include/python2.7 -DNDEBUG -g 
 DEP=kernel.cpp kernel.h main.cpp kernel.cu support/common.h support/cuda-setup.h support/partitioner.h support/timer.h support/verify.h
 SRC=xnor.cpp kernel.cu
-#EXE=../BinaryNet/Run-time/gemm.so
-EXE=xnor.so
+EXE=../BinaryNet/Run-time/xnor.so
+#EXE=xnor.so
 
 all:
 	$(CXX) $(CXX_FLAGS) $(SRC) $(LIB) $(INC) -Xlinker -export-dynamic -lpython2.7 -lpthread -ldl  -lutil -lrt -lblas -o $(EXE) 

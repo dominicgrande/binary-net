@@ -10,6 +10,7 @@ import theano.sandbox.cuda as cuda
 from theano.sandbox.cuda.basic_ops import host_from_gpu
 
 import gemm as gemm_lib
+import xnor as xnor_lib
 import lasagne
 globalCounter = 0
 
@@ -82,7 +83,7 @@ class Gemm(cuda.GpuOp):
             block = (block_size,block_size,1)
             grid = (k / block_size+1, m / block_size+1) # better too many blocks than too little
 
-            gemm_kernel(A,B,C[0], np.intc(m), np.intc(n), np.intc(k), block= block, grid=grid)
+            # gemm_kernel(A,B,C[0], np.intc(m), np.intc(n), np.intc(k), block= block, grid=grid)
             A_gpu_pointer = A.gpudata
             B_gpu_pointer = B.gpudata
             C_gpu_pointer = C[0].gpudata
@@ -142,7 +143,6 @@ class XnorGemm(cuda.GpuOp):
         outputs = [storage_map[v] for v in node.outputs]
         # THIS IS PROBABLY THE PART YOU ARE INTERESTED IN
         def thunk():
-            global globalCounter    
             # inputs
             A = inputs[0][0]
             B = inputs[1][0]
@@ -161,25 +161,33 @@ class XnorGemm(cuda.GpuOp):
             if C[0] is None or C[0].shape != output_shape:
                 C[0] = cuda.CudaNdarray.zeros(output_shape)
 
-            # Concatenating the rows of A
-            Ac = drv.mem_alloc(m*n*4/32)
-            block_size = 64
-            block = (block_size,1,1)
-            grid = (m*n/(block_size*32)+1,1)
-            concatenate_rows_kernel(A,Ac, np.intc(m*n/32), block= block, grid=grid)
+            # # Concatenating the rows of A
+            # Ac = drv.mem_alloc(m*n*4/32)
+            # block_size = 64
+            # block = (block_size,1,1)
+            # grid = (m*n/(block_size*32)+1,1)
+            # concatenate_rows_kernel(A,Ac, np.intc(m*n/32), block= block, grid=grid)
             
-            # Concatenating the columns of B
-            Bc = drv.mem_alloc(n*k*4/32)  
-            block_size = 64 
-            block = (block_size,1,1)
-            grid = (k/block_size+1,1)
-            concatenate_cols_kernel(B,Bc, np.intc(n), np.intc(k), block= block, grid=grid)
+            # # Concatenating the columns of B
+            # Bc = drv.mem_alloc(n*k*4/32)  
+            # block_size = 64 
+            # block = (block_size,1,1)
+            # grid = (k/block_size+1,1)
+            # concatenate_cols_kernel(B,Bc, np.intc(n), np.intc(k), block= block, grid=grid)
             
-            # Launching xnor_kernel
-            block_size = 16
-            block = (block_size,block_size,1)
-            grid = (k / block_size + 1, m / block_size + 1) # better too many blocks than too little
-            xnor_kernel(Ac,Bc,C[0], np.intc(m), np.intc(n/32.), np.intc(k), block= block, grid=grid)
+            # # Launching xnor_kernel
+            # block_size = 16
+            # block = (block_size,block_size,1)
+            # grid = (k / block_size + 1, m / block_size + 1) # better too many blocks than too little
+            # xnor_kernel(Ac,Bc,C[0], np.intc(m), np.intc(n/32.), np.intc(k), block= block, grid=grid)
+            A_gpu_pointer = A.gpudata
+            B_gpu_pointer = B.gpudata
+            C_gpu_pointer = C[0].gpudata
+
+            xnor_lib.CPU_GPU_Gemm(  A_gpu_pointer, B_gpu_pointer, C_gpu_pointer,
+                                    np.int32(10000), np.int32(784), 
+                                    np.int32(784), np.int32(4096), 
+                                    np.int32(10000), np.int32(4096) );
 	    globalCounter +=1
         thunk.inputs = inputs
         thunk.outputs = outputs

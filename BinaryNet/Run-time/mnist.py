@@ -1,4 +1,5 @@
 import gemm as gemm_lib
+import xnor as xnor_lib
 import sys
 import os
 import time
@@ -96,11 +97,13 @@ if __name__ == "__main__":
     lasagne.layers.set_all_param_values(mlp, param_values)
 
     print param_values[0].size
-#    for i in range( len(param_values)):
-#        print param_values[i].size
+   for i in range( len(param_values)):
+       print param_values[i].size
+    exit()
 
     gemm_lib.Load_Weights(param_values[0].flatten().astype(np.float32))
     gemm_lib.initMemory(np.float(1),np.int32(0), np.int32(10000), np.int32(784), np.int32(784), np.int32(4096), np.int32(10000), np.int32(4096) );
+    xnor_lib.initLibrary(np.float(1),np.int32(0), np.int32(10000), np.int32(784), np.int32(784), np.int32(4096), np.int32(10000), np.int32(4096) );
 
     # Binarize the weights
     params = lasagne.layers.get_all_params(mlp)
