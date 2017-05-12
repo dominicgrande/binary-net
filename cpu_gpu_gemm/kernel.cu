@@ -297,7 +297,7 @@ void call_GPU_Kernel(int n_tasks, float alpha, int numAColumns,
 
     dim3 dimGrid(ceil(numARows/(float)TILE_WIDTH_M), ceil(numBColumns/(float)TILE_WIDTH_N), 1);
     dim3 dimBlock(TILE_WIDTH_M,1,1);
-    gemm<<<dimGrid, dimBlock>>>(weights, output, numARows, numAColumns, numBColumns);
+    gemm<<<dimGrid, dimBlock>>>(x, weights, output, numARows, numAColumns, numBColumns);
 
 /*
     dim3 dimGrid(numBColumns/(float)BLOCK_SIZE, numARows/(float)BLOCK_SIZE,1);
