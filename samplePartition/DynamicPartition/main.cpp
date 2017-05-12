@@ -2,11 +2,11 @@
 #include <cuda>
 
 int main(){
-    int* atomicVal;
-    cudaMalloc(&atomicVal, sizeof(int));
-    int startVal = 0;
-    cudaMemcpy(atomicVal, startVal, sizeof(int), memcpyHostToDevice);
+    int* val;
+    cudaMalloc(&val, sizeof(int));
+    
+    cudaMemset(val, 1, 1);
 
-    int printOut = atomicAdd(atomicVal, 1);
-    std::cout << "The atomic add value is: " << printOut;
+    int *output;
+    cudaMemcpy(output, val, sizeof(int), cudamemcpyDeviceToHost);
 }
