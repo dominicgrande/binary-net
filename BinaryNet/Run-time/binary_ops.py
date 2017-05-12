@@ -138,11 +138,12 @@ class XnorGemm(cuda.GpuOp):
         concatenate_rows_kernel = mod.get_function("concatenate_rows_kernel")
         concatenate_cols_kernel = mod.get_function("concatenate_cols_kernel")
         xnor_kernel = mod.get_function("xnor_gemm")
-    
+           
         inputs = [storage_map[v] for v in node.inputs]
         outputs = [storage_map[v] for v in node.outputs]
         # THIS IS PROBABLY THE PART YOU ARE INTERESTED IN
         def thunk():
+            global globalCounter
             # inputs
             A = inputs[0][0]
             B = inputs[1][0]
@@ -184,11 +185,12 @@ class XnorGemm(cuda.GpuOp):
             B_gpu_pointer = B.gpudata
             C_gpu_pointer = C[0].gpudata
 
-            xnor_lib.CPU_GPU_Gemm(  A_gpu_pointer, B_gpu_pointer, C_gpu_pointer,
+            # xnor_lib.Load_Weights(param_values[0].flatten().astype(np.float32))
+            xnor_lib.CPU_GPU_Xnor(  A_gpu_pointer, B_gpu_pointer, C_gpu_pointer,
                                     np.int32(10000), np.int32(784), 
                                     np.int32(784), np.int32(4096), 
                                     np.int32(10000), np.int32(4096) );
-	    globalCounter +=1
+	    # globalCounter +=1
         thunk.inputs = inputs
         thunk.outputs = outputs
         thunk.lazy = False

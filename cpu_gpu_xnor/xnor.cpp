@@ -80,8 +80,8 @@ void CPU_GPU_Xnor(unsigned long A_ptr, unsigned long B_ptr, unsigned long C_ptr,
     cudaStreamSynchronize(kernel_stream);
 
     cudaMemcpyAsync(A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
-    call_GPU_xnor(A_Column, A_Row, B_Column, Ac, Bc, C, kernel_stream);
 
+    call_GPU_xnor(A_Column, A_Row, B_Column, Ac,At, Bc, C, kernel_stream);
 
     if (alpha<1.0){
 
@@ -134,7 +134,7 @@ void initLibrary(float alpha_in, int pinned_memory_input,
         A_Host = new float [height*A_Column];
         C_Host = new float [height*C_Column];
     }
-    cudaMalloc(&At, A_Row*A_Column*sizeof(float));
+    cudaMalloc(&At, A_Row*A_Column/32*sizeof(unsigned int));
     cudaMalloc(&Ac,A_Row * A_Column/32 * sizeof(unsigned int));
     cudaMalloc(&Bc,B_Row * B_Column/32 * sizeof(unsigned int));
 

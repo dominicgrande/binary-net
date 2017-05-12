@@ -253,18 +253,30 @@ void call_GPU_concatenate_cols(int n, int m, int k, float* B, unsigned int* Bc,
     // concatenate_cols_kernel(B,Bc, np.intc(n), np.intc(k), block= block, grid=grid)
     concatenate_cols_kernel<<<dimGrid, dimBlock, 0, kernel_stream>>>(B, Bc, n, k);
 }
-void call_GPU_xnor(int n, int m, int k, unsigned int* Ac, unsigned int* Bc,
+// void call_GPU_xnor(int n, int m, int k, unsigned int* Ac, unsigned int* Bc,
+//     float* C, cudaStream_t kernel_stream){
+
+
+//     int block_size = 16;
+//     // block = (block_size,block_size,1)
+//     // grid = (k / block_size + 1, m / block_size + 1) # better too many blocks than too little
+//     dim3 dimBlock_xnor(block_size, block_size, 1);
+//     dim3 dimGrid_xnor(k / block_size + 1, m / block_size + 1, 1);
+
+//     // xnor_kernel(Ac,Bc,C[0], np.intc(m), np.intc(n/32.), np.intc(k), block= block, grid=grid)
+//     xnor_gemm<<<dimGrid_xnor,dimBlock_xnor, 0, kernel_stream>>>(Ac, Bc, C, m, (int)n/32.0 , k); 
+
+// }
+
+void call_GPU_xnor(int n, int m, int k, unsigned int* Ac, unsigned int* T, unsigned int* Bc,
     float* C, cudaStream_t kernel_stream){
+    dim3 dimBlock_t(BLOCK_SIZE, BLOCK_SIZE, 1);
+    float nn = n/32.0;
+    dim3 dimGrid_t(ceil(nn/(float)BLOCK_SIZE), ceil(m/(float)BLOCK_SIZE), 1);
+    transpose<<<dimGrid_t, dimBlock_t>>>(Ac, T, m, (int)nn);
 
-
-    int block_size = 16;
-    // block = (block_size,block_size,1)
-    // grid = (k / block_size + 1, m / block_size + 1) # better too many blocks than too little
-    dim3 dimBlock_xnor(block_size, block_size, 1);
-    dim3 dimGrid_xnor(k / block_size + 1, m / block_size + 1, 1);
-
-    // xnor_kernel(Ac,Bc,C[0], np.intc(m), np.intc(n/32.), np.intc(k), block= block, grid=grid)
-    xnor_gemm<<<dimGrid_xnor,dimBlock_xnor, 0, kernel_stream>>>(Ac, Bc, C, m, (int)n/32.0 , k); 
-
+    dim3 dimBlock_xnor(TILE_SIZE_M,1,1);
+    dim3 dimGrid_xnor(ceil(m/(float)TILE_SIZE_M),
+        ceil(k/(float)TILE_SIZE_N),1); 
+    xnor_gemm<<<dimGrid_xnor,dimBlock_xnor, 0, kernel_stream>>>(T, Bc, C, m, (int)n/32.0 , k); 
 }
-
