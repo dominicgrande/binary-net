@@ -57,8 +57,9 @@ void CPU_GPU_Gemm(float * A, float* At, float * B, float * C, float alpha,
     // timer.start("Kernel Call");
     //Changed the A_GPU_Row start with altered alpha value
     cudaMemcpyAsync(temp_A_Host,&A[(A_GPU_Row)* A_Column], temp_A_Host_Size ,cudaMemcpyDeviceToHost, data_stream);
+    
     call_GPU_Kernel(A_Column, A_GPU_Row, B_Column, B_Row,
-                                 A_GPU_Row, C_Column, B, A, C,At, kernel_stream);
+                                 A_GPU_Row, C_Column, B, A, C, At, kernel_stream);
 
     if (alpha<1.0){
 

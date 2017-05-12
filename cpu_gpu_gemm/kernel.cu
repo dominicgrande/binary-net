@@ -285,7 +285,7 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 
 
 
-void call_GPU_Kernel(int n_tasks, float alpha, int numAColumns, 
+void call_GPU_Kernel(int numAColumns, 
     int numARows, int numBColumns, int numBRows,
     int numCRows, int numCColumns, float *weights, float *x, float* output,
     float* xt,cudaStream_t stream)
