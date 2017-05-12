@@ -14,13 +14,10 @@ void run_cpu_threads(T *matrix_out, T *matrix, std::atomic_int *flags, int n, in
 // void call_GPU_Kernel(int numAColumns, int numARows, int numBColumns, int numBRows,
 //                         int numCRows, int numCColumns, float *weights, float *x, float* output,float* xt, cudaStream_t stream);
 
-void call_GPU_Kernel(int n_tasks, float alpha, int numAColumns, 
+void call_GPU_Kernel(int numAColumns, 
     int numARows, int numBColumns, int numBRows,
     int numCRows, int numCColumns, float *weights, float *x, float* output,
-    float* xt,cudaStream_t stream
-     #ifdef CUDA_8_0
-        , worklist
-    #endif);
+    float* xt, cudaStream_t stream);
 
 void serialMatrixMultiply(float *A, float *B, float *C,
                                      int numARows, int numAColumns,
