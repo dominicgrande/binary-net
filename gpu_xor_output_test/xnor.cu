@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <stdio.h>
+#include <chrono>
 #define BLOCK_SIZE 16
 
 // CUDA tutorial: http://www.nvidia.com/docs/IO/116711/sc11-cuda-c-basics.pdf
@@ -185,15 +186,17 @@ __global__ void xnor_gemm(unsigned int* A, unsigned int* B, float* C, int m, int
 }
 
 int main(){
-    float* A;
-    A = new float[32*64];
-    float* B;
-    B = new float[32*64];
 
-    for (int i=0; i<32*64; i++)
+    int n = 10000;
+    float* A;
+    A = new float[10000*4096];
+    float* B;
+    B = new float[4096*4096];
+
+    for (int i=0; i<10000*4096; i++)
         A[i] = 1.0;
 
-    for (int j=0; j<32*64; j++)
+    for (int j=0; j<4096*4096; j++)
         B[j] = -1.0;
 
     float* A_Device; 
@@ -201,31 +204,36 @@ int main(){
     unsigned int* A_Shrunk_Device; 
     unsigned int* B_Shrunk_Device;
     float*  C_Shrunk_Device;
-    cudaMalloc(&A_Device, (size_t)32*64*sizeof(float));
-    cudaMalloc(&B_Device, (size_t)32*64*sizeof(float));
-    cudaMalloc(&A_Shrunk_Device, (size_t)(32*64*sizeof(unsigned int)/32));
-    cudaMalloc(&B_Shrunk_Device, (size_t)(32*64*sizeof(unsigned int)/32));
-    cudaMalloc(&C_Shrunk_Device, (size_t)(32*32*sizeof(float)));
+    cudaMalloc(&A_Device, (size_t)10000*4096*sizeof(float));
+    cudaMalloc(&B_Device, (size_t)4096*4096*sizeof(float));
+    cudaMalloc(&A_Shrunk_Device, (size_t)(10000*4096*sizeof(unsigned int)/32));
+    cudaMalloc(&B_Shrunk_Device, (size_t)(4096*4096*sizeof(unsigned int)/32));
+    cudaMalloc(&C_Shrunk_Device, (size_t)(10000*4096*sizeof(float)));
 
-    cudaMemcpy(A_Device, A, 32*64*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(B_Device, B, 32*64*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(A_Device, A, 10000*4096*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(B_Device, B, 4096*4096*sizeof(float), cudaMemcpyHostToDevice);
 
+    std::chrono::steady_clock::time_point begin2 = std::chrono::steady_clock::now();
     dim3 blockRows(64, 1, 1);
-    dim3 gridRows(32*64/(64*32)+1, 1);
-    concatenate_rows_kernel<<<gridRows, blockRows>>>(A_Device, A_Shrunk_Device, (32*64)/32);
+    dim3 gridRows(10000*4096/(64*32)+1, 1);
+    concatenate_rows_kernel<<<gridRows, blockRows>>>(A_Device, A_Shrunk_Device, 10000*4096/32);
+    cudaDeviceSynchronize();
+    std::chrono::steady_clock::time_point end2= std::chrono::steady_clock::now();
+    std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end2 - begin2).count() << std::endl;
 
     dim3 blockColumn(64, 1, 1);
-    dim3 gridColumn(32/64+1, 1);
-    concatenate_cols_kernel<<<gridColumn, blockColumn>>>(B_Device, B_Shrunk_Device, 64, 32);
+    dim3 gridColumn(4096/64+1, 1);
+    concatenate_cols_kernel<<<gridColumn, blockColumn>>>(B_Device, B_Shrunk_Device, 4096, 4096);
 
     dim3 xorBlock(16, 16, 1);
-    dim3 xorGrid(32/16+1, 32/16+1);
-    xnor_gemm<<<xorGrid, xorBlock>>>(A_Shrunk_Device, B_Shrunk_Device, C_Shrunk_Device, 32, 64/32, 32);
+
+    dim3 xorGrid(4096/16+1, 10000/16+1);
+    xnor_gemm<<<xorGrid, xorBlock>>>(A_Shrunk_Device, B_Shrunk_Device, C_Shrunk_Device, 4096, 10000/32, 4096);
 
 
-    float* C_Shrunk = new float[32*32];
+    // float* C_Shrunk = new float[32*32];
 
-    cudaMemcpy(C_Shrunk, C_Shrunk_Device, 32*32*sizeof(float), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(C_Shrunk, C_Shrunk_Device, 32*32*sizeof(float), cudaMemcpyDeviceToHost);
 
     // for (int i=0; i<32*32; i++)
     // {
@@ -233,13 +241,13 @@ int main(){
     // }
 
     // multiplyMatrices(B_Shrunk, A_Shrunk, C_Shrunk, 32, 2, 2, 32);
-    std::cout << "C values" << std::endl;
-    for (int x=0; x<32; x++)
-    {
-        for (int y=0; y<32; y++)
-            std::cout << std::setbase(16) << std::showbase <<(int)(C_Shrunk[x*32+y]) << " " ;
+    // std::cout << "C values" << std::endl;
+    // for (int x=0; x<32; x++)
+    // {
+    //     for (int y=0; y<32; y++)
+    //         std::cout << std::setbase(16) << std::showbase <<(int)(C_Shrunk[x*32+y]) << " " ;
 
-        std::cout << std::endl;
-    }
+    //     std::cout << std::endl;
+    // }
 }
 
