@@ -88,8 +88,8 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // float *C_Device;
      cudaStream_t kernel_stream;
      cudaStream_t data_stream;
-     cudaStreamCreate(&kernel_stream);
      cudaStreamCreate(&data_stream); 
+     cudaStreamCreate(&kernel_stream);
 
     // unsigned int *Ac;
     // unsigned int *Bc;
@@ -116,7 +116,6 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // cudaMalloc(&C_Device, sizeof(float)*m*k);
    
 
-     cudaMemcpyAsync(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost, data_stream);
      call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac, kernel_stream);
     // unsigned int* aHostConcat = new unsigned int[(A_CPU_Row_Start)*A_Column];
     //  unsigned int* bHostConcat = new unsigned int[(B_Column*B_Row)/32];
@@ -128,13 +127,14 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc, kernel_stream);
    
     
+    cudaMemcpyAsync(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost, data_stream);
     cudaStreamSynchronize(kernel_stream);
      //cudaMemcpy(aHostConcat, &Ac[(A_Column*A_GPU_Row_End)/32], sizeof(unsigned int)*(A_CPU_Row_Start*n)/32, cudaMemcpyDeviceToHost);
     //  cudaMemcpyAsync(bHostConcat, Bc, sizeof(unsigned int)*(n*k)/32, cudaMemcpyDeviceToHost, data_stream);
      
     // cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
 
-    call_GPU_xnor(A_Column, A_GPU_Row, B_Column, Ac, Ac_t, Bc, C_Device, kernel_stream);
+    call_GPU_xnor(A_Column, A_GPU_Row, B_Column, Ac, Ac_t, Bc, C_Device, data_stream);
     // int ib=16;
 
     // unsigned int* cHostConcat = new unsigned int[(A_CPU_Row_Start*k)/32]; 
@@ -264,13 +264,13 @@ int main(){
     
 
 
-    //int timex [21];
-    //int iteration = 10;
-    //for(int j = 0; j<=20;  j += 1){
-    //    alpha = .90 + j * .005;
-    //    int timetemp = 0;
-    //    for(int i = 0; i<iteration; i++){
-    //        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+//#    int timex [21];
+//#    int iteration = 10;
+//#    for(int j = 0; j<=20;  j += 1){
+//#        alpha = .90 + j * .005;
+//#        int timetemp = 0;
+//#        for(int i = 0; i<iteration; i++){
+            std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     CPU_GPU_Xor(A, B, C, alpha, alpha, alpha,
                             A_Row, A_Column,
                             B_Row, B_Column,
@@ -279,7 +279,7 @@ int main(){
                             C_Device, Ac,
                             Bc,Ac_t, NULL,
                             NULL);
-//
+
 //                             std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
 //
 //            timetemp += (int)std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
@@ -294,8 +294,8 @@ int main(){
 //    {
 //        std::cout << value << ",";
 //    }
-//
-//
+
+
     cudaFree(A_device);
     cudaFree(B_device);
     cudaFree(Ac);
