@@ -77,7 +77,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
 
    
 
-    const int A_GPU_Row = (int)ceil(alpha_1*A_Row);
+    const int A_GPU_Row = (int)alpha_1*A_Row;
     const int A_CPU_Row = A_Row - A_GPU_Row;
 
     // const int B_GPU_Col_End = roundUp((int)ceil(alpha_2*B_Column));
@@ -134,7 +134,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
      
     // cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
 
-    call_GPU_xnor(A_Column, A_GPU_Row, B_Column, Ac, Ac_t, Bc, C_Device, data_stream);
+    call_GPU_xnor(A_Column, A_GPU_Row, B_Column, Ac, Ac_t, Bc, C_Device, kernel_stream);
     // int ib=16;
 
     // unsigned int* cHostConcat = new unsigned int[(A_CPU_Row_Start*k)/32]; 
