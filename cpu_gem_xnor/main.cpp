@@ -77,7 +77,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
 
    
 
-    const int A_GPU_Row = (int)alpha_1*A_Row;
+    const int A_GPU_Row = (int)(alpha_1*A_Row);
     const int A_CPU_Row = A_Row - A_GPU_Row;
 
     // const int B_GPU_Col_End = roundUp((int)ceil(alpha_2*B_Column));
