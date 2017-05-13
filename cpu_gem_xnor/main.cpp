@@ -99,7 +99,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     int k = B_Column;
 
     int temp_A_Host_Size = sizeof(float)*A_CPU_Row*A_Column;
-    float* temp_A_Host = (float *)malloc(temp_A_Host_Size);
+    float* temp_A_Host; // = (float *)malloc(temp_A_Host_Size);
     cudaMallocHost(&temp_A_Host,temp_A_Host_Size);
 
     // unsigned int* aHostConcat = new unsigned int[(A_CPU_Row_Start)*A_Column];
@@ -115,6 +115,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // cudaMalloc(&Bc, (size_t)((n*k*sizeof(unsigned int))/32));
     // cudaMalloc(&C_Device, sizeof(float)*m*k);
    
+    cudaMemcpyAsync(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost, data_stream);
 
      call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac, kernel_stream);
     // unsigned int* aHostConcat = new unsigned int[(A_CPU_Row_Start)*A_Column];
@@ -127,7 +128,6 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     call_GPU_concatenate_cols(A_Column, A_Row, B_Column, B_device, Bc, kernel_stream);
    
     
-    cudaMemcpyAsync(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost, data_stream);
     cudaStreamSynchronize(kernel_stream);
      //cudaMemcpy(aHostConcat, &Ac[(A_Column*A_GPU_Row_End)/32], sizeof(unsigned int)*(A_CPU_Row_Start*n)/32, cudaMemcpyDeviceToHost);
     //  cudaMemcpyAsync(bHostConcat, Bc, sizeof(unsigned int)*(n*k)/32, cudaMemcpyDeviceToHost, data_stream);
@@ -270,7 +270,7 @@ int main(){
 //#        alpha = .90 + j * .005;
 //#        int timetemp = 0;
 //#        for(int i = 0; i<iteration; i++){
-            std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+//            std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     CPU_GPU_Xor(A, B, C, alpha, alpha, alpha,
                             A_Row, A_Column,
                             B_Row, B_Column,
