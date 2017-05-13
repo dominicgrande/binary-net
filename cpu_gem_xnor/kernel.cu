@@ -255,7 +255,7 @@ void call_GPU_xnor(int n, int m, int k, unsigned int* Ac, unsigned int* Ac_T, un
     dim3 dimBlock_t(BLOCK_SIZE, BLOCK_SIZE, 1);
    // float nn = n/32.0;
     dim3 dimGrid_t(ceil((n/32)/(float)BLOCK_SIZE), ceil(m/(float)BLOCK_SIZE), 1);
-    transpose<<<dimGrid_t, dimBlock_t>>>(Ac, Ac_T, m, n/32);
+    transpose<<<dimGrid_t, dimBlock_t,0, kernel_stream>>>(Ac, Ac_T, m, n/32);
 
     dim3 dimBlock_xnor(TILE_SIZE_M,1,1);
     dim3 dimGrid_xnor(ceil(m/(float)TILE_SIZE_M),
