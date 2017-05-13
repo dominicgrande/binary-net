@@ -86,6 +86,10 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // float *A_device;
     // float *B_device;
     // float *C_Device;
+     cudaStream_t kernel_stream;
+     cudaStream_t data_stream;
+     cudaStreamCreate(&kernel_stream);
+     cudaStreamCreate(&data_stream); 
 
     // unsigned int *Ac;
     // unsigned int *Bc;
@@ -111,10 +115,6 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // cudaMalloc(&Bc, (size_t)((n*k*sizeof(unsigned int))/32));
     // cudaMalloc(&C_Device, sizeof(float)*m*k);
    
-     cudaStream_t kernel_stream;
-     cudaStream_t data_stream;
-     cudaStreamCreate(&kernel_stream);
-     cudaStreamCreate(&data_stream); 
 
      call_GPU_concatenate_rows(A_Column, A_Row, A_device, Ac, kernel_stream);
     // unsigned int* aHostConcat = new unsigned int[(A_CPU_Row_Start)*A_Column];
@@ -160,7 +160,10 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
         cudaMemcpyAsync(&C[A_GPU_Row * C_Column], C, sizeof(float)*A_CPU_Row*C_Column, cudaMemcpyHostToDevice, data_stream);
     }
 
-    cudaStreamSynchronize(kernel_stream);
+    cudaDeviceSynchronize();
+
+    cudaStreamDestroy(kernel_stream);
+    cudaStreamDestroy(data_stream);
 
     //std::cout << "First memcpy" << std::endl;
     //  std::cout << "The value of B_Column - B_CPU_Row_Start " << B_Column - B_CPU_Col_Start << std::endl;
@@ -178,7 +181,6 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
     // cudaMemcpy(cHost, C_Device, (sizeof(float)*m*k)/32, cudaMemcpyHostToDevice);
 
 
-    // std::cout << "The start value is: " << (A_CPU_Row_Start*C_Column+B_CPU_Col_Start)/32 << std::endl;
     // std::cout << "The end value is: " << (C_Row*128)/32 << std::endl;
 
     // cudaFree(A_device);
@@ -263,9 +265,9 @@ int main(){
 
 
     int timex [21];
-    int iteration = 20;
+    int iteration = 10;
     for(int j = 0; j<=20;  j += 1){
-        alpha = .99 + j * .0005;
+        alpha = .90 + j * .005;
         int timetemp = 0;
         for(int i = 0; i<iteration; i++){
             std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
