@@ -69,7 +69,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
                   int C_Row, int C_Column,
                   float* A_device, float* B_device,
                   float* C_Device, unsigned int* Ac,
-                  unsigned int* Bc, unsigned int* aHostConcat2,
+                  unsigned int* Bc, unsigned int*Ac_t,  unsigned int* aHostConcat2,
                   unsigned int* bHostConcat2){
 
     Timer        timer;
@@ -134,7 +134,7 @@ void CPU_GPU_Xor(float * A, float * B, float * C, float alpha_1, float alpha_2, 
      
     // cudaMemcpy(temp_A_Host, &A[(A_GPU_Row)* A_Column], sizeof(float)*(int) (A_CPU_Row*A_Column), cudaMemcpyDeviceToHost);
 
-    call_GPU_xnor(A_Column, A_GPU_Row, B_Column, Ac, Bc, C_Device, kernel_stream);
+    call_GPU_xnor(A_Column, A_GPU_Row, B_Column, Ac, Ac_t, Bc, C_Device, kernel_stream);
     // int ib=16;
 
     // unsigned int* cHostConcat = new unsigned int[(A_CPU_Row_Start*k)/32]; 
@@ -235,6 +235,7 @@ int main(){
     float *C_Device;
 
     unsigned int *Ac;
+    unsigned int *Ac_t;
     unsigned int *Bc;
 
     int m = A_Row;
@@ -248,6 +249,7 @@ int main(){
     cudaMemcpy(B_device, B, sizeof(float)*B_Column*B_Row, cudaMemcpyHostToDevice);
 
     cudaMalloc(&Ac, (size_t)((m*n*sizeof(unsigned int))/32));
+    cudaMalloc(&Ac_t, (size_t)((m*n*sizeof(unsigned int))/32));
     cudaMalloc(&Bc, (size_t)((n*k*sizeof(unsigned int))/32));
     cudaMalloc(&C_Device, sizeof(float)*m*k);
    
@@ -261,9 +263,9 @@ int main(){
 
 
     int timex [21];
-    int iteration = 5;
+    int iteration = 20;
     for(int j = 0; j<=20;  j += 1){
-        alpha = .9 + j * .005;
+        alpha = .99 + j * .0005;
         int timetemp = 0;
         for(int i = 0; i<iteration; i++){
             std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -273,7 +275,7 @@ int main(){
                             C_Row, C_Column,
                             A_device, B_device,
                             C_Device, Ac,
-                            Bc, NULL,
+                            Bc,Ac_t, NULL,
                             NULL);
 
                              std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
